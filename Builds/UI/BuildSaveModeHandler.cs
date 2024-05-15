@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BuildSaveModeHanfler : MonoBehaviour
+public class BuildSaveModeHandler : MonoBehaviour
 {
     [SerializeField] GameObject indicator;
 
