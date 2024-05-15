@@ -31,7 +31,7 @@ public class PanelSaveBuilding : MonoBehaviour
         if (input.text.Length == 0 && saveBlocks.Count == 0)
             return;
 
-        var data = new Build() { blocks = saveBlocks };
+        var data = new BuildGenerator.BuildBlocks() { blocks = saveBlocks };
         var path = $"{Application.dataPath}/Data/Builds/{input.text}.json";
         var json = JsonUtility.ToJson(data);//Json.Serialize(saveBlocks);
         File.WriteAllText(path, json);
@@ -47,10 +47,6 @@ public class PanelSaveBuilding : MonoBehaviour
     }
 
 
-    [Serializable]
-    public class Build
-    {
-        public List<BlockData> blocks;
-    }
+    
 }
 

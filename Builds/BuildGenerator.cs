@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
-using static PanelSaveBuilding;
 
 public class BuildGenerator
 {
@@ -12,7 +11,7 @@ public class BuildGenerator
     {
         var result = new BuildedData();
        
-        var data = JsonUtility.FromJson<Build>(textAsset.text);
+        var data = JsonUtility.FromJson<BuildBlocks>(textAsset.text);
         var blocks = data.blocks;
 
         int minX = Mathf.RoundToInt(blocks.Min(b => b.pos.x));
@@ -120,5 +119,11 @@ public class BuildGenerator
     {
         public List<Vector3> globalBlockPoses;
         public GameObject triiger;
+    }
+
+    [System.Serializable]
+    public class BuildBlocks
+    {
+        public List<BlockData> blocks;
     }
 }

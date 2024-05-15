@@ -2,12 +2,12 @@
     "name": "com.othergames.blocks-world",
     "author": "Woger",
     "displayName": "Blocks World",
-    "description": "Уруру",
-    "unity": "2020.3",
-    "version": "2022.3.25",
+    "description": "Часть для создания блоковых игр отвечающая за генерацию мира на основе чанков",
+    "version": "1.0.0",
     "keywords": [
         "WoM",
-        "Minecraft"
+        "Minecraft",
+        "Blocks"
     ],
     "dependencies": {},
     "repository": {

@@ -37,12 +37,6 @@ public class WorldGenerator : MonoBehaviour
     public static UnityEvent<BlockData> onBlockPick = new UnityEvent<BlockData>();
     public static UnityEvent<BlockData> onBlockPlace = new UnityEvent<BlockData>();
 
-    private void Awake()
-    {
-        EventsHolder.onPlayerSpawnAny.AddListener(PlayerAny_Spawned);
-
-    }
-
     private void Start()
     {
         Inst = this;
@@ -56,7 +50,7 @@ public class WorldGenerator : MonoBehaviour
         onReady?.Invoke();
     }
 
-    private void PlayerAny_Spawned(Transform player)
+    public void AddPlayer(Transform player)
     {
         players.Add(player);
     }
@@ -542,7 +536,7 @@ public class WorldGenerator : MonoBehaviour
         chunck.collider.sharedMesh = otherMesh;
     }
 
-    internal ChunckComponent GetChunk(Vector3 globalPosBlock, out Vector3Int chunckKey)
+    public ChunckComponent GetChunk(Vector3 globalPosBlock, out Vector3Int chunckKey)
     {
         int xIdx = Mathf.FloorToInt(globalPosBlock.x / size);
         int zIdx = Mathf.FloorToInt(globalPosBlock.z / size);
@@ -558,7 +552,7 @@ public class WorldGenerator : MonoBehaviour
         return null;
     }
 
-    internal ChunckComponent GetChunk(Vector3 globalPosBlock)
+    public ChunckComponent GetChunk(Vector3 globalPosBlock)
     {
         int xIdx = Mathf.FloorToInt(globalPosBlock.x / size);
         int zIdx = Mathf.FloorToInt(globalPosBlock.z / size);
@@ -734,7 +728,7 @@ public class WorldGenerator : MonoBehaviour
         return mesh;
     }
 
-    internal Mesh UpdateMesh(ChunckComponent chunck)
+    public Mesh UpdateMesh(ChunckComponent chunck)
     {
         var frontChunck  = GetChunk(chunck.pos + (Vector3.forward * size));
         var backChunck   = GetChunk(chunck.pos + (Vector3.back * size));

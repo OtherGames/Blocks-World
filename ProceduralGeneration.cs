@@ -22,6 +22,7 @@ public class ProceduralGeneration : MonoBehaviour
     {
         Random.InitState(888);
 
+        
         // ============== Генерация Гор =============
         var k = 1000;//10000000;// чем больше тем реже
 
