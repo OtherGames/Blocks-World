@@ -23,7 +23,7 @@ public class DropedBlockGenerator
 
     }
 
-    internal Mesh GenerateBlockMesh(byte blockID)
+    public Mesh GenerateBlockMesh(byte blockID)
     {
         Mesh mesh = new();
         mesh.Clear();
@@ -54,7 +54,7 @@ public class DropedBlockGenerator
         return mesh;
     }
 
-    internal Mesh GenerateMeshBlock(byte blockID)
+    public Mesh GenerateMeshBlock(byte blockID)
     {
         Mesh mesh = new();
         mesh.Clear();
