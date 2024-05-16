@@ -37,10 +37,13 @@ public class WorldGenerator : MonoBehaviour
     public static UnityEvent<BlockData> onBlockPick = new UnityEvent<BlockData>();
     public static UnityEvent<BlockData> onBlockPlace = new UnityEvent<BlockData>();
 
-    private void Start()
+    private void Awake()
     {
         Inst = this;
+    }
 
+    private void Start()
+    {
         blockVerticesSet = new Dictionary<BlockSide, List<Vector3>>();
         blockTrianglesSet = new Dictionary<BlockSide, List<int>>();
 
