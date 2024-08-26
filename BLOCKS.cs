@@ -4,9 +4,12 @@ using UnityEngine;
 
 public static class BLOCKS
 {
+    public const byte GRASS = 1;
     public const byte STONE = 2;
+    public const byte COBBLESTONE = 3;
     public const byte DIRT = 4;
-    public const byte WOOD = 8;
+    public const byte WOOD = 9;
+    public const byte LEAVES = 10;
     public const byte WOODEN_PLANK = 11;
     public const byte FURNACE = 102;
     public const byte SALTPETER = 31;

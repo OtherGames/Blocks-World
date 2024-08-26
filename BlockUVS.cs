@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BlockUVS
+public struct BlockUVS
 {
     public int TextureX;
     public int TextureY;
@@ -61,10 +61,10 @@ public class BlockUVS
                 return new BlockUVS(2, 13);
             case 7:
                 return new BlockUVS(4, 2);
-            case 8:// Бревно
+            case 8:
                 return new BlockUVS(5, 14, 4, 14);
-            case 9:
-                return new BlockUVS(0, 2);
+            case 9:// Бревно
+                return new BlockUVS(5, 14, 4, 14);
             case 10:// Листва
                 return new BlockUVS(5, 12);
             case 11:// Доски
