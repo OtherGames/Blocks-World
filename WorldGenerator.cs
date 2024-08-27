@@ -4,10 +4,12 @@ using Unity.AI.Navigation;
 using UnityEngine;
 using UnityEngine.Events;
 using static BLOCKS;
+using System.Linq;
 
 public class WorldGenerator : MonoBehaviour
 {
     [SerializeField] LayerMask navMeshLayer;
+    [SerializeField] bool generateNavMesh = true;
     [SerializeField] int viewChunck = 5;
     [SerializeField] float navMeshVoxelSize = 0.18f;
     public ProceduralGeneration procedural;
@@ -64,6 +66,7 @@ public class WorldGenerator : MonoBehaviour
         DynamicCreateChunck();
     }
 
+    List<Vector3Int> checkingPoses = new List<Vector3Int>();
     void DynamicCreateChunck()
     {
         var viewDistance = viewChunck * size;
@@ -98,36 +101,30 @@ public class WorldGenerator : MonoBehaviour
             {
                 key *= size;
                 CreateChunck(key.x, key.y, key.z);
-                //continue;
             }
 
-
-
-            //primary = GetChunk(pos + (Vector3.forward * (size/2)), out key);
-            //if (primary == null)
-            //{
-            //    key *= size;
-            //    CreateChunck(key.x, key.y, key.z);
-            //    continue;
-            //}
-
+            checkingPoses.Clear();
             for (float x = -viewDistance + pos.x; x < viewDistance + pos.x; x += size)
             {
                 for (float y = -viewDistance + pos.y; y < viewDistance + pos.y; y += size)
                 {
                     for (float z = -viewDistance + pos.z; z < viewDistance + pos.z; z += size)
                     {
-                        var checkingPos = new Vector3(x, y, z);
-                        var chunck = GetChunk(checkingPos, out var chunckKey);
-
-                        if (chunck == null)
+                        var worldPos = new Vector3(x, y, z);
+                        if (!HasChunck(worldPos, out var checkingKey))
                         {
-                            chunckKey *= size;
-                            CreateChunck(chunckKey.x, chunckKey.y, chunckKey.z);
-                            return;
+                            checkingPoses.Add(checkingKey * size);
                         }
                     }
                 }
+            }
+
+            // Переделать без аллокаций Линки
+            foreach (var checkingKey in checkingPoses.OrderBy(p => (p - player.position).sqrMagnitude))
+            {
+                var chunckKey = checkingKey;
+                CreateChunck(chunckKey.x, chunckKey.y, chunckKey.z);
+                return;
             }
         }
     }
@@ -176,24 +173,28 @@ public class WorldGenerator : MonoBehaviour
         chunck.meshFilter = meshFilter;
         chunck.collider = collider;
 
-        //chunck.navMeshModifier = chunckGO.AddComponent<NavMeshModifier>();
-        chunck.meshSurface = chunckGO.AddComponent<NavMeshSurface>();
-        chunck.meshSurface.layerMask = navMeshLayer;
-        chunck.meshSurface.collectObjects = CollectObjects.Children;
-        chunck.meshSurface.useGeometry = UnityEngine.AI.NavMeshCollectGeometry.PhysicsColliders;
-        chunck.meshSurface.overrideVoxelSize = true;
-        chunck.meshSurface.voxelSize = navMeshVoxelSize;
-        chunck.meshSurface.overrideTileSize = true;
-        chunck.meshSurface.tileSize = 128;//64;
-        chunck.meshSurface.minRegionArea = 0.3f;
-        //chunck.meshSurface
-       
-        StartCoroutine(DelayableBuildNavMesh(chunck));
+        if (generateNavMesh)
+        {
+            //chunck.navMeshModifier = chunckGO.AddComponent<NavMeshModifier>();
+            chunck.meshSurface = chunckGO.AddComponent<NavMeshSurface>();
+            chunck.meshSurface.layerMask = navMeshLayer;
+            chunck.meshSurface.collectObjects = CollectObjects.Children;
+            chunck.meshSurface.useGeometry = UnityEngine.AI.NavMeshCollectGeometry.PhysicsColliders;
+            chunck.meshSurface.overrideVoxelSize = true;
+            chunck.meshSurface.voxelSize = navMeshVoxelSize;
+            chunck.meshSurface.overrideTileSize = true;
+            chunck.meshSurface.tileSize = 128;//64;
+            chunck.meshSurface.minRegionArea = 0.3f;
+            //chunck.meshSurface
+
+            StartCoroutine(DelayableBuildNavMesh(chunck));
             //chunck.meshSurface.BuildNavMesh();
-        
-        
-        //UpdateNavMesh(chunck.meshSurface.navMeshData);
-        
+
+            //UpdateNavMesh(chunck.meshSurface.navMeshData);
+        }
+
+
+
         //count++;
         //print(count);
         chunckGO.layer = 7;
@@ -539,13 +540,18 @@ public class WorldGenerator : MonoBehaviour
         chunck.collider.sharedMesh = otherMesh;
     }
 
+    Vector3Int chunckKeyForGetChunck;
     public ChunckComponent GetChunk(Vector3 globalPosBlock, out Vector3Int chunckKey)
     {
         int xIdx = Mathf.FloorToInt(globalPosBlock.x / size);
         int zIdx = Mathf.FloorToInt(globalPosBlock.z / size);
         int yIdx = Mathf.FloorToInt(globalPosBlock.y / size);
 
-        chunckKey = new Vector3Int(xIdx, yIdx, zIdx);
+        chunckKeyForGetChunck.x = xIdx;
+        chunckKeyForGetChunck.y = yIdx;
+        chunckKeyForGetChunck.z = zIdx;
+
+        chunckKey = chunckKeyForGetChunck;
 
         if (chuncks.ContainsKey(chunckKey))
         {
@@ -553,6 +559,21 @@ public class WorldGenerator : MonoBehaviour
         }
 
         return null;
+    }
+
+    public bool HasChunck(Vector3 worldPos, out Vector3Int chunckKey)
+    {
+        int xIdx = Mathf.FloorToInt(worldPos.x / size);
+        int zIdx = Mathf.FloorToInt(worldPos.z / size);
+        int yIdx = Mathf.FloorToInt(worldPos.y / size);
+
+        chunckKeyForGetChunck.x = xIdx;
+        chunckKeyForGetChunck.y = yIdx;
+        chunckKeyForGetChunck.z = zIdx;
+
+        chunckKey = chunckKeyForGetChunck;
+
+        return chuncks.ContainsKey(chunckKey);
     }
 
     public ChunckComponent GetChunk(Vector3 globalPosBlock)
