@@ -832,7 +832,10 @@ public class WorldGenerator : MonoBehaviour
         mesh.OptimizeReorderVertexBuffer();
         mesh.Optimize();
 
-        StartCoroutine(DelayableUpdateNavMesh(chunck));
+        if (generateNavMesh)
+        {
+            StartCoroutine(DelayableUpdateNavMesh(chunck));
+        }
 
         return mesh;
     }
