@@ -27,6 +27,7 @@ public class WorldGenerator : MonoBehaviour
     Dictionary<BlockSide, List<Vector3>> blockVerticesSet;
     Dictionary<BlockSide, List<int>> blockTrianglesSet;
     List<ChunckComponent> deferredCreateLinksChuncks = new List<ChunckComponent>();
+    List<Vector3Int> notGeneratedChuncks = new List<Vector3Int>();
 
     readonly List<Vector3> vertices = new();
     readonly List<int> triangulos = new();
@@ -68,7 +69,8 @@ public class WorldGenerator : MonoBehaviour
     
     }
 
-    List<Vector3Int> checkingPoses = new List<Vector3Int>();
+    List<Vector3Int> checkingPoses     = new List<Vector3Int>();
+    List<Vector3Int> notGeneratedPoses = new List<Vector3Int>();
     void DynamicCreateChunck()
     {
         var viewDistance = viewChunck * size;
@@ -101,6 +103,7 @@ public class WorldGenerator : MonoBehaviour
             }
 
             checkingPoses.Clear();
+            notGeneratedChuncks.Clear();
             for (float x = -viewDistance + pos.x; x < viewDistance + pos.x; x += size)
             {
                 for (float y = -viewDistance + pos.y; y < viewDistance + pos.y; y += size)
@@ -108,9 +111,16 @@ public class WorldGenerator : MonoBehaviour
                     for (float z = -viewDistance + pos.z; z < viewDistance + pos.z; z += size)
                     {
                         var worldPos = new Vector3(x, y, z);
+                        
                         if (!HasChunck(worldPos, out var checkingKey))
                         {
                             checkingPoses.Add(checkingKey * size);
+                        }
+
+                        if (notGeneratedChuncks.Contains(checkingKey))
+                        {
+                            notGeneratedPoses.Add(checkingKey);
+                            notGeneratedChuncks.Remove(checkingKey);
                         }
                     }
                 }
@@ -123,7 +133,108 @@ public class WorldGenerator : MonoBehaviour
                 CreateChunck(chunckKey.x, chunckKey.y, chunckKey.z);
                 return;
             }
+
+            foreach (var chunckKey in notGeneratedPoses)
+            {
+                GenerateChunck(chunckKey);
+            }
         }
+    }
+
+    private ChunckComponent GenerateChunck(Vector3Int chunckKey)
+    {
+        ClearMeshFields();
+
+        var chunck = chuncks[chunckKey];
+
+        int chunckPosX = (int)chunck.pos.x;
+        int chunckPosY = (int)chunck.pos.y;
+        int chunckPosZ = (int)chunck.pos.z;
+        int worldX;
+        int worldY;
+        int worldZ;
+        if (!chunck.blocksLoaded)
+        {
+            for (int x = 0; x < size; x++)
+            {
+                for (int y = 0; y < size; y++)
+                {
+                    for (int z = 0; z < size; z++)
+                    {
+                        worldX = x + chunckPosX;
+                        worldY = y + chunckPosY;
+                        worldZ = z + chunckPosZ;
+                        byte generatedBlockID = procedural.GetBlockID(worldX, worldY, worldZ);
+
+                        if (generatedBlockID == DIRT && procedural.GetBlockID(worldX, worldY + 1, worldZ) == 0)
+                        {
+                            chunck.blocks[x, y, z] = GRASS;
+                            chunck.grassBlocks.Add(new Vector3Int(worldX, worldY, worldZ));
+                        }
+                        else
+                        {
+                            chunck.blocks[x, y, z] = generatedBlockID;
+                        }
+                    }
+                }
+            }
+        }
+
+        ChunckComponent.onBlocksSeted?.Invoke(chunck);
+
+        var mesh = GenerateMesh(chunck, chunckPosX, chunckPosY, chunckPosZ);
+
+        var chunckGO = new GameObject($"Chunck {chunckPosX} {chunckPosY} {chunckPosZ}");
+        var renderer = chunckGO.AddComponent<MeshRenderer>();
+        var meshFilter = chunckGO.AddComponent<MeshFilter>();
+        var collider = chunckGO.AddComponent<MeshCollider>();
+        renderer.material = mat;
+        meshFilter.mesh = mesh;
+        collider.sharedMesh = mesh;
+        chunckGO.transform.position = new Vector3(chunckPosX, chunckPosY, chunckPosZ);
+        chunckGO.transform.SetParent(transform, false);
+
+        chunck.renderer = renderer;
+        chunck.meshFilter = meshFilter;
+        chunck.collider = collider;
+
+        if (generateNavMesh)
+        {
+            chunck.meshSurface = chunckGO.AddComponent<NavMeshSurface>();
+            chunck.meshSurface.layerMask = navMeshLayer;
+            chunck.meshSurface.collectObjects = CollectObjects.Children;
+            chunck.meshSurface.useGeometry = UnityEngine.AI.NavMeshCollectGeometry.PhysicsColliders;
+            chunck.meshSurface.overrideVoxelSize = true;
+            chunck.meshSurface.voxelSize = navMeshVoxelSize;
+            chunck.meshSurface.overrideTileSize = true;
+            chunck.meshSurface.tileSize = 128;//64;
+            chunck.meshSurface.minRegionArea = 0.3f;
+
+            StartCoroutine(DelayableBuildNavMesh(chunck));
+        }
+
+        chunckGO.layer = 7;
+
+        return chunck;
+    }
+
+    private void ClearMeshFields()
+    {
+        vertices?.Clear();
+        triangulos?.Clear();
+        uvs?.Clear();
+    }
+
+    public ChunckComponent CreateChunckWithoutGenerate(int posX, int posY, int posZ)
+    {
+        var chunck = new ChunckComponent(posX, posY, posZ)
+        {
+            chunckState = ChunckState.NotGenerated
+        };
+        var key = new Vector3Int(posX / size, posY / size, posZ / size);
+        notGeneratedChuncks.Add(key);
+        chuncks.Add(new(key.x, key.y, key.z), chunck);
+        return chunck;
     }
 
     public ChunckComponent CreateChunck(int posX, int posY, int posZ)
@@ -590,6 +701,15 @@ public class WorldGenerator : MonoBehaviour
         chunckKey = chunckKeyForGetChunck;
 
         return chuncks.ContainsKey(chunckKey);
+    }
+
+    Vector3Int convertToChunckKey;
+    public Vector3Int WorldPosToChunckKey(Vector3 worldPos)
+    {
+        convertToChunckKey.x = Mathf.FloorToInt(worldPos.x / size);
+        convertToChunckKey.y = Mathf.FloorToInt(worldPos.z / size);
+        convertToChunckKey.z = Mathf.FloorToInt(worldPos.y / size);
+        return convertToChunckKey;
     }
 
     public ChunckComponent GetChunk(Vector3 globalPosBlock)

@@ -12,15 +12,16 @@ public class ChunckComponent
     public MeshFilter meshFilter;
     public MeshCollider collider;
     public Vector3 pos;
-
     public byte[,,] blocks;
 
     public NavMeshModifier navMeshModifier;
     public NavMeshSurface meshSurface;
+    public ChunckState chunckState;
 
     public Dictionary<Vector3, NavMeshLink> links = new Dictionary<Vector3, NavMeshLink>();
     public List<Vector3Int> grassBlocks = new List<Vector3Int>();
-
+    
+    public int size;
     public bool blocksLoaded;
 
     public static UnityEvent<ChunckComponent> onChunckInit = new UnityEvent<ChunckComponent>();
@@ -31,9 +32,11 @@ public class ChunckComponent
 
     public ChunckComponent(int posX, int posY, int posZ)
     {
-        var size = WorldGenerator.size;
+        size = WorldGenerator.size;
         blocks = new byte[size, size, size];
-        pos = new Vector3(posX, posY, posZ);
+        pos.x = posX;
+        pos.y = posY;
+        pos.z = posZ;
 
         onChunckInit?.Invoke(this);
     }
@@ -61,6 +64,12 @@ public class ChunckComponent
 
         return blockID;
     }
+}
+
+public enum ChunckState : byte
+{
+    Generated     = 0,
+    NotGenerated  = 1,
 }
 
 [JsonObject]

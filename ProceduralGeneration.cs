@@ -318,13 +318,11 @@ public class ProceduralGeneration : MonoBehaviour
     Vector3 settingableOffset;
     public byte GetBlockID(int x, int y, int z, GenerateBlockIdSettings settings)
     {
-        Random.InitState(888);
-
         byte blockID = 0;
 
-        settingableOffset.x = Random.value * settings.randomFactor;
-        settingableOffset.y = Random.value * settings.randomFactor;
-        settingableOffset.z = Random.value * settings.randomFactor;
+        settingableOffset.x = settings.randomFactor;
+        settingableOffset.y = settings.randomFactor;
+        settingableOffset.z = settings.randomFactor;
         
         var noiseX = Mathf.Abs((float)(x + settingableOffset.x) / settings.noiseScale);
         var noiseY = Mathf.Abs((float)(y + settingableOffset.y) / settings.noiseScale);
