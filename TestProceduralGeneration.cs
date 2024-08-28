@@ -8,7 +8,24 @@ public class TestProceduralGeneration : ProceduralGeneration
 {
     [SerializeField] int randomFactor = 1000;
 
+
     public override byte GetBlockID(int x, int y, int z)
+    {
+        var settings = new GenerateBlockIdSettings()
+        {
+            noiseScale = 30,
+            yCorrect = 1,
+            landThresold = 10,
+            landHeight = 1,
+            landBump = 8,
+            landHeightSlice = 8,
+            randomFactor = 888
+        };
+
+        return GetBlockID(x, y, z, settings);
+    }
+
+    public byte GetBlockooooID(int x, int y, int z)
     {
         Random.InitState(888);
 

@@ -313,7 +313,50 @@ public class ProceduralGeneration : MonoBehaviour
         //{
         //    return true;
         //}
-
-
     }
+
+    Vector3 settingableOffset;
+    public byte GetBlockID(int x, int y, int z, GenerateBlockIdSettings settings)
+    {
+        Random.InitState(888);
+
+        byte blockID = 0;
+
+        settingableOffset.x = Random.value * settings.randomFactor;
+        settingableOffset.y = Random.value * settings.randomFactor;
+        settingableOffset.z = Random.value * settings.randomFactor;
+        
+        var noiseX = Mathf.Abs((float)(x + settingableOffset.x) / settings.noiseScale);
+        var noiseY = Mathf.Abs((float)(y + settingableOffset.y) / settings.noiseScale);
+        var noiseZ = Mathf.Abs((float)(z + settingableOffset.z) / settings.noiseScale);
+
+        var noiseValue = SimplexNoise.Noise.Generate(noiseX, noiseY / settings.yCorrect, noiseZ);
+
+        noiseValue += (settings.landHeight - y) / settings.landBump;// World bump
+        noiseValue /= y / settings.landHeightSlice;
+
+        //noiseValue += (30 - y) / 30f;// World bump
+        //noiseValue /= y / 8f;
+
+        //cavernas /= y / 19f;
+        //cavernas /= 2;
+
+        if (noiseValue > settings.landThresold)
+        {
+            blockID = DIRT;
+        }
+
+        return blockID;
+    }
+}
+
+public struct GenerateBlockIdSettings
+{
+    public float noiseScale;
+    public float yCorrect;
+    public float landThresold;
+    public float landHeight;
+    public float landBump;
+    public float landHeightSlice;
+    public float randomFactor;
 }
