@@ -9,16 +9,18 @@ public class ProceduralGeneration : MonoBehaviour
     [Tooltip("Чем больше тем мир более \"растянутый\"")]
     public int noiseScale = 89;
     public float landThresold = 0.11f;
-    public float rockThresold = 0.5f;
+    [SerializeField] float rockThresold = 0.5f;
     float smallRockThresold = 0.8f;
-    [SerializeField] float landHeight = 30f;
-    [SerializeField] float landBump = 30f;
-    [SerializeField] float landHeightSlice = 8f;
+    [Tooltip("Уровень высоты на которой будет генериться ландшафт")]
+    [SerializeField] protected float landHeight = 30f;
+    [Tooltip("Диапазон высоты")]
+    [SerializeField] protected float landBump = 30f;
+    [SerializeField] protected float landHeightSlice = 8f;
 
     float minValue = float.MaxValue;
     float maxValue = float.MinValue;
 
-    public byte GetBlockID(int x, int y, int z)
+    public virtual byte GetBlockID(int x, int y, int z)
     {
         Random.InitState(888);
 

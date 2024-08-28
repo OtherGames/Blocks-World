@@ -9,7 +9,8 @@ using System.Linq;
 public class WorldGenerator : MonoBehaviour
 {
     [SerializeField] LayerMask navMeshLayer;
-    [SerializeField] bool generateNavMesh = true;
+    [SerializeField] bool generateNavMesh  = true;
+    [SerializeField] bool generateNavLinks = true;
     [SerializeField] int viewChunck = 5;
     [SerializeField] float navMeshVoxelSize = 0.18f;
     public ProceduralGeneration procedural;
@@ -62,8 +63,9 @@ public class WorldGenerator : MonoBehaviour
 
     private void Update()
     {
-        
+
         DynamicCreateChunck();
+    
     }
 
     List<Vector3Int> checkingPoses = new List<Vector3Int>();
@@ -80,24 +82,19 @@ public class WorldGenerator : MonoBehaviour
 
             var pos = player.transform.position.ToGlobalRoundBlockPos();
 
-            var primary = GetChunk(pos + (Vector3.down * (size + 3)), out var key);
-            if (primary == null)
+            if (!HasChunck(pos + (Vector3.down * (size + 3)), out var key))
             {
                 key *= size;
                 CreateChunck(key.x, key.y, key.z);
-                //continue;
             }
 
-            primary = GetChunk(pos + (Vector3.down * (size / 2)), out key);
-            if (primary == null)
+            if (!HasChunck(pos + (Vector3.down * (size / 2)), out key))
             {
                 key *= size;
                 CreateChunck(key.x, key.y, key.z);
-                //continue;
             }
 
-            primary = GetChunk(pos, out key);
-            if (primary == null)
+            if (!HasChunck(pos, out key))
             {
                 key *= size;
                 CreateChunck(key.x, key.y, key.z);
@@ -137,6 +134,9 @@ public class WorldGenerator : MonoBehaviour
 
         var chunck = new ChunckComponent(posX, posY, posZ);
 
+        int worldX;
+        int worldY;
+        int worldZ;
         if (!chunck.blocksLoaded)
         {
             for (int x = 0; x < size; x++)
@@ -145,10 +145,20 @@ public class WorldGenerator : MonoBehaviour
                 {
                     for (int z = 0; z < size; z++)
                     {
-                        chunck.blocks[x, y, z] = procedural.GetBlockID(x + posX, y + posY, z + posZ);//GeneratedBlockID(x + posX, y + posY, z + posZ);
-                        if (chunck.blocks[x, y, z] == DIRT && procedural.GetBlockID(x + posX, y + posY + 1, z + posZ) == 0)
+                        worldX = x + posX;
+                        worldY = y + posY;
+                        worldZ = z + posZ;
+                        byte generatedBlockID = procedural.GetBlockID(worldX, worldY, worldZ);
+                        
+                        if (generatedBlockID == DIRT && procedural.GetBlockID(worldX, worldY + 1, worldZ) == 0)
                         {
-                            chunck.blocks[x, y, z] = 1;
+                            chunck.blocks[x, y, z] = GRASS;
+                            chunck.grassBlocks.Add(new Vector3Int(worldX, worldY, worldZ));
+                        }
+                        else
+                        {
+                            chunck.blocks[x, y, z] = generatedBlockID;
+
                         }
                     }
                 }
@@ -214,7 +224,10 @@ public class WorldGenerator : MonoBehaviour
 
             navMeshSurface.BuildNavMesh();
 
-            CreateLinks(chunck);
+            if (generateNavLinks)
+            {
+                CreateLinks(chunck);
+            }
         }
     }
 
@@ -235,7 +248,10 @@ public class WorldGenerator : MonoBehaviour
                 navMeshSurface.BuildNavMesh();
             }
 
-            CreateLinks(chunck);
+            if (generateNavLinks)
+            {
+                CreateLinks(chunck);
+            }
         }
     }
 
@@ -726,14 +742,7 @@ public class WorldGenerator : MonoBehaviour
                         {
                             CreateBlockSide(BlockSide.Bottom, x, y, z, b);
                         }
-                        //if (!(y + 1 >= size) && chunck.blocks[x, y + 1, z] == 0 || y + 1 >= size)
-                        //{
-                        //    CreateBlockSide(BlockSide.Top, x, y, z, b);
-                        //}
-                        //if (!(y - 1 < 0) && chunck.blocks[x, y - 1, z] == 0)
-                        //{
-                        //    CreateBlockSide(BlockSide.Bottom, x, y, z, b);
-                        //}
+                        
                     }
                 }
             }

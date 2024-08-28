@@ -19,6 +19,7 @@ public class ChunckComponent
     public NavMeshSurface meshSurface;
 
     public Dictionary<Vector3, NavMeshLink> links = new Dictionary<Vector3, NavMeshLink>();
+    public List<Vector3Int> grassBlocks = new List<Vector3Int>();
 
     public bool blocksLoaded;
 
