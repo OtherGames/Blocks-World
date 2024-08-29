@@ -32,6 +32,7 @@ public class TestProceduralGeneration : ProceduralGeneration
 
             useLandHeight = useHeight,
             useHeightSlice = useSlice,
+            useValuePower = useValuePower,
         };
 
         return GetBlockID(x, y, z, settings);

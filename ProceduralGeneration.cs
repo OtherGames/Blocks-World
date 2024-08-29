@@ -116,7 +116,10 @@ public class ProceduralGeneration : MonoBehaviour
         //// =========== Ãîðû Õó¸ðû ===================
         if (GetBlockID(x, y, z, rockSettings) > 0)
         {
-            blockID = STONE_8_3;
+            if (GetBlockID(x, y, z, excludeRockSettings) == 0)
+            {
+                blockID = STONE_8_3;
+            }
         }
         //// ==========================================
 
@@ -384,6 +387,21 @@ public class ProceduralGeneration : MonoBehaviour
         useLandHeight = false,
         useHeightSlice = true,
         useValuePower = true,
+    };
+
+    GenerateBlockIdSettings excludeRockSettings = new GenerateBlockIdSettings()
+    {
+        noiseScale = 80,
+        yCorrect = 0.8f,
+        landThresold = 0.8f,
+        landHeight = 0,
+        landBump = 0,
+        landHeightSlice = 0,
+        randomFactor = 888,
+
+        useLandHeight = false,
+        useHeightSlice = false,
+        useValuePower = false,
     };
 }
 
