@@ -111,6 +111,17 @@ public class ProceduralGeneration : MonoBehaviour
         {
             blockID = STONE;
         }
+
+
+        //// =========== Горы Хуёры ===================
+        if (GetBlockID(x, y, z, rockSettings) > 0)
+        {
+            blockID = STONE_8_3;
+        }
+        //// ==========================================
+
+
+
         // ==========================================
 
         //// =========== Скалы, типа пики =============
@@ -330,14 +341,27 @@ public class ProceduralGeneration : MonoBehaviour
 
         var noiseValue = SimplexNoise.Noise.Generate(noiseX, noiseY / settings.yCorrect, noiseZ);
 
-        noiseValue += (settings.landHeight - y) / settings.landBump;// World bump
-        noiseValue /= y / settings.landHeightSlice;
+        if (settings.useLandHeight)
+        {
+            noiseValue += (settings.landHeight - y) / settings.landBump;// World bump
+        }
+
+        if (settings.useValuePower)
+        {
+            noiseValue *= noiseValue;
+        }
+
+        if (settings.useHeightSlice)
+        {
+            noiseValue /= y / settings.landHeightSlice;
+        }
 
         //noiseValue += (30 - y) / 30f;// World bump
         //noiseValue /= y / 8f;
 
         //cavernas /= y / 19f;
         //cavernas /= 2;
+
 
         if (noiseValue > settings.landThresold)
         {
@@ -346,6 +370,21 @@ public class ProceduralGeneration : MonoBehaviour
 
         return blockID;
     }
+
+    GenerateBlockIdSettings rockSettings = new GenerateBlockIdSettings()
+    {
+        noiseScale = 180,
+        yCorrect = 1,
+        landThresold = 1.8f,
+        landHeight = 300,
+        landBump = 800,
+        landHeightSlice = 188,
+        randomFactor = 888,
+
+        useLandHeight = false,
+        useHeightSlice = true,
+        useValuePower = true,
+    };
 }
 
 public struct GenerateBlockIdSettings
@@ -357,4 +396,8 @@ public struct GenerateBlockIdSettings
     public float landBump;
     public float landHeightSlice;
     public float randomFactor;
+
+    public bool useLandHeight;
+    public bool useHeightSlice;
+    public bool useValuePower;
 }

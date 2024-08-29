@@ -15,6 +15,7 @@ public class WorldGenerator : MonoBehaviour
     [SerializeField] float navMeshVoxelSize = 0.18f;
     public ProceduralGeneration procedural;
     public Material mat;
+    public int countGenerateByOneFrame = 1;
 
     public Dictionary<Vector3Int, ChunckComponent> chuncks = new();
 
@@ -126,12 +127,17 @@ public class WorldGenerator : MonoBehaviour
                 }
             }
 
+            int idx = 0;
             // Переделать без аллокаций Линки
             foreach (var checkingKey in checkingPoses.OrderBy(p => (p - player.position).sqrMagnitude))
             {
                 var chunckKey = checkingKey;
                 CreateChunck(chunckKey.x, chunckKey.y, chunckKey.z);
-                return;
+                idx++;
+                if (idx > countGenerateByOneFrame)
+                {
+                    return;
+                }
             }
 
             foreach (var chunckKey in notGeneratedPoses)

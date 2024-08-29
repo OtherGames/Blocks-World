@@ -6,20 +6,32 @@ using static BLOCKS;
 
 public class TestProceduralGeneration : ProceduralGeneration
 {
+    [Space(38)]
+
+    [SerializeField] float scaleY = 1f;
+    [SerializeField] float landScale = 100;
+    [SerializeField] float thresold = 0.8f;
+    [SerializeField] float slice = 80;
     [SerializeField] int randomFactor = 1000;
+    [SerializeField] bool useHeight;
+    [SerializeField] bool useSlice;
+    [SerializeField] bool useValuePower;
 
 
     public override byte GetBlockID(int x, int y, int z)
     {
         var settings = new GenerateBlockIdSettings()
         {
-            noiseScale = 30,
-            yCorrect = 1,
-            landThresold = 10,
-            landHeight = 1,
-            landBump = 8,
-            landHeightSlice = 8,
-            randomFactor = 888
+            noiseScale = landScale,
+            yCorrect = scaleY,
+            landThresold = thresold,
+            landHeight = 300,
+            landBump = 800,
+            landHeightSlice = slice,
+            randomFactor = randomFactor,
+
+            useLandHeight = useHeight,
+            useHeightSlice = useSlice,
         };
 
         return GetBlockID(x, y, z, settings);

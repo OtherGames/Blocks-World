@@ -11,6 +11,7 @@ public static class BLOCKS
     public const byte WOOD = 9;
     public const byte LEAVES = 10;
     public const byte WOODEN_PLANK = 11;
+    public const byte STONE_8_3 = 14;
     public const byte FURNACE = 102;
     public const byte SALTPETER = 31;
     public const byte ORE_SULFUR = 32;

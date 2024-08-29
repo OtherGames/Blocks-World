@@ -71,8 +71,8 @@ public struct BlockUVS
                 return new BlockUVS(4, 15);
             case 12:// Голубая Шэрст
                 return new BlockUVS(2, 4);
-            case 14:// Шэрст
-                return new BlockUVS(1, 4);
+            case 14:// Какой-то камень
+                return new BlockUVS(8, 3);
             case 30:// Железная руда
                 return new BlockUVS(1, 13);
             case 31:// Селитра
