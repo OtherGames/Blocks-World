@@ -389,10 +389,11 @@ public class ProceduralGeneration : MonoBehaviour
         useValuePower = true,
     };
 
+    [SerializeField]
     GenerateBlockIdSettings excludeRockSettings = new GenerateBlockIdSettings()
     {
-        noiseScale = 80,
-        yCorrect = 0.8f,
+        noiseScale = 58,
+        yCorrect = 0.7f,
         landThresold = 0.8f,
         landHeight = 0,
         landBump = 0,
@@ -405,6 +406,7 @@ public class ProceduralGeneration : MonoBehaviour
     };
 }
 
+[System.Serializable]
 public struct GenerateBlockIdSettings
 {
     public float noiseScale;
