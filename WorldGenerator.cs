@@ -1405,6 +1405,7 @@ public class WorldGenerator : MonoBehaviour
     private void OnDestroy()
     {
         onBlockPick.RemoveAllListeners();
+        onBlockPlace.RemoveAllListeners();
     }
 
     public static readonly Vector3[] facesOffsets = new Vector3[6]

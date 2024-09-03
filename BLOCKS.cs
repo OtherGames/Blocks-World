@@ -30,6 +30,8 @@ public static class BLOCKS
         STONE = 2,
         COBBLESTONE = 3,
         DIRT = 4,
-        WOOD = 8,
+        WOOD = 9,
+        LEAVES = 10,
+
     }
 }
