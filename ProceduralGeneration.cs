@@ -389,7 +389,7 @@ public class ProceduralGeneration : MonoBehaviour
         useValuePower = true,
     };
 
-    [SerializeField]
+    [Space][SerializeField]
     GenerateBlockIdSettings excludeRockSettings = new GenerateBlockIdSettings()
     {
         noiseScale = 58,

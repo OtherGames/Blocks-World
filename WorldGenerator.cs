@@ -1402,6 +1402,11 @@ public class WorldGenerator : MonoBehaviour
     float minValue = float.MaxValue;
     float maxValue = float.MinValue;
 
+    private void OnDestroy()
+    {
+        onBlockPick.RemoveAllListeners();
+    }
+
     public static readonly Vector3[] facesOffsets = new Vector3[6]
     {
         new Vector3( 0.0f, 0.0f,-1.0f),
