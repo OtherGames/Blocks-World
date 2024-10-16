@@ -13,11 +13,13 @@ public class WorldGenerator : MonoBehaviour
     [SerializeField] bool generateNavLinks = true;
     [SerializeField] int viewChunck = 5;
     [SerializeField] float navMeshVoxelSize = 0.18f;
+    [SerializeField] public Mesh testoMesh;
     public ProceduralGeneration procedural;
     public Material mat;
     public int countGenerateByOneFrame = 1;
 
-    public Dictionary<Vector3Int, ChunckComponent> chuncks = new();
+    public Dictionary<Vector3Int, ChunckComponent> chuncks = new Dictionary<Vector3Int, ChunckComponent>();
+    public Dictionary<byte, Mesh> blockableMeshes = new Dictionary<byte, Mesh>();
 
     public const int size = 16;
     public const int noiseScale = 100;
@@ -56,6 +58,8 @@ public class WorldGenerator : MonoBehaviour
         InitTriangulos();
 
         onReady?.Invoke();
+
+        blockableMeshes.Add(1, testoMesh);
     }
 
     public void AddPlayer(Transform player)
@@ -826,6 +830,7 @@ public class WorldGenerator : MonoBehaviour
         onBlockPlace?.Invoke(blockData);
     }
 
+    Vector3 blockableLocalPos;
     Mesh GenerateMesh(ChunckComponent chunck, int posX, int posY, int posZ)
     {
         Mesh mesh = new();
@@ -837,38 +842,45 @@ public class WorldGenerator : MonoBehaviour
             {
                 for (int z = 0; z < size; z++)
                 {
-                    if (chunck.blocks[x, y, z] > 0)
+                    var blockID = chunck.blocks[x, y, z];
+                    if (blockID > 0)
                     {
                         BlockUVS b = BlockUVS.GetBlock(chunck.blocks[x, y, z]);
 
-                        //if (x == 0 && z == 0)
-                        //    b = new BlockUVS(2, 15);
-
-                        if ((z + 1 >= size && procedural.GetBlockID(x + posX, y + posY, z + 1 + posZ) == 0) || (!(z + 1 >= size) && chunck.blocks[x, y, z + 1] == 0))
+                        if (blockableMeshes.ContainsKey(blockID))
                         {
-                            CreateBlockSide(BlockSide.Front, x, y, z, b);
+                            blockableLocalPos.x = x;
+                            blockableLocalPos.y = y;
+                            blockableLocalPos.z = z;
+                            CreateBlockable(blockID, blockableMeshes[blockID], blockableLocalPos);
                         }
-                        if ((z - 1 < 0 && procedural.GetBlockID(x + posX, y + posY, z - 1 + posZ) == 0) || (!(z - 1 < 0) && chunck.blocks[x, y, z - 1] == 0))
+                        else
                         {
-                            CreateBlockSide(BlockSide.Back, x, y, z, b);
+                            if ((z + 1 >= size && procedural.GetBlockID(x + posX, y + posY, z + 1 + posZ) == 0) || (!(z + 1 >= size) && chunck.blocks[x, y, z + 1] == 0))
+                            {
+                                CreateBlockSide(BlockSide.Front, x, y, z, b);
+                            }
+                            if ((z - 1 < 0 && procedural.GetBlockID(x + posX, y + posY, z - 1 + posZ) == 0) || (!(z - 1 < 0) && chunck.blocks[x, y, z - 1] == 0))
+                            {
+                                CreateBlockSide(BlockSide.Back, x, y, z, b);
+                            }
+                            if ((x + 1 >= size && procedural.GetBlockID(x + 1 + posX, y + posY, z + posZ) == 0) || (!(x + 1 >= size) && chunck.blocks[x + 1, y, z] == 0))
+                            {
+                                CreateBlockSide(BlockSide.Right, x, y, z, b);
+                            }
+                            if ((x - 1 < 0 && procedural.GetBlockID(x - 1 + posX, y + posY, z + posZ) == 0) || (!(x - 1 < 0) && chunck.blocks[x - 1, y, z] == 0))
+                            {
+                                CreateBlockSide(BlockSide.Left, x, y, z, b);
+                            }
+                            if ((y + 1 >= size && procedural.GetBlockID(x + posX, y + posY + 1, z + posZ) == 0) || (!(y + 1 >= size) && chunck.blocks[x, y + 1, z] == 0))
+                            {
+                                CreateBlockSide(BlockSide.Top, x, y, z, b);
+                            }
+                            if ((y - 1 < 0 && procedural.GetBlockID(x + posX, y + posY - 1, z + posZ) == 0) || (!(y - 1 < 0) && chunck.blocks[x, y - 1, z] == 0))
+                            {
+                                CreateBlockSide(BlockSide.Bottom, x, y, z, b);
+                            }
                         }
-                        if ((x + 1 >= size && procedural.GetBlockID(x + 1 + posX, y + posY, z + posZ) == 0) || (!(x + 1 >= size) && chunck.blocks[x + 1, y, z] == 0))
-                        {
-                            CreateBlockSide(BlockSide.Right, x, y, z, b);
-                        }
-                        if ((x - 1 < 0 && procedural.GetBlockID(x - 1 + posX, y + posY, z + posZ) == 0) || (!(x - 1 < 0) && chunck.blocks[x - 1, y, z] == 0))
-                        {
-                            CreateBlockSide(BlockSide.Left, x, y, z, b);
-                        }
-                        if ((y + 1 >= size && procedural.GetBlockID(x + posX, y + posY + 1, z + posZ) == 0) || (!(y + 1 >= size) && chunck.blocks[x, y + 1, z] == 0))
-                        {
-                            CreateBlockSide(BlockSide.Top, x, y, z, b);
-                        }
-                        if ((y - 1 < 0 && procedural.GetBlockID(x + posX, y + posY - 1, z + posZ) == 0) || (!(y - 1 < 0) && chunck.blocks[x, y - 1, z] == 0))
-                        {
-                            CreateBlockSide(BlockSide.Bottom, x, y, z, b);
-                        }
-                        
                     }
                 }
             }
@@ -885,6 +897,26 @@ public class WorldGenerator : MonoBehaviour
         mesh.Optimize();
 
         return mesh;
+    }
+
+    Vector3 blockableVertexOffset = new Vector3(-0.5f, 0.5f, 0.5f);
+    private void CreateBlockable(byte blockID, Mesh mesh, Vector3 offset)
+    {
+        foreach (var triangle in mesh.triangles)
+        {
+            triangulos.Add(triangle + vertices.Count);
+        }
+        var meshVertices = mesh.vertices;
+        meshVertices = RotationUtility.RotatePoints(meshVertices, 90, RotationUtility.Axis.X);
+
+        foreach (var vrtx in meshVertices)
+        {
+            vertices.Add(vrtx + offset + blockableVertexOffset);
+        }
+        foreach (var item in mesh.uv)
+        {
+            uvs.Add(item);
+        }
     }
 
     public Mesh UpdateMesh(ChunckComponent chunck)
@@ -1123,6 +1155,11 @@ public class WorldGenerator : MonoBehaviour
 
         }
 
+    }
+
+    public void AddBlockableMesh(byte blockID, Mesh mesh)
+    {
+        blockableMeshes.Add(blockID, mesh);
     }
 
     public byte GeneratedBlockID(int x, int y, int z)
