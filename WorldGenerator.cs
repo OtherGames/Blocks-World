@@ -941,40 +941,51 @@ public class WorldGenerator : MonoBehaviour
             {
                 for (int z = 0; z < size; z++)
                 {
-                    if (chunck.blocks[x, y, z] > 0)
+                    var blockID = chunck.blocks[x, y, z];
+                    if (blockID > 0)
                     {
                         BlockUVS b = BlockUVS.GetBlock(chunck.blocks[x, y, z]); //new(0, 15, 3, 15, 2, 15);
+                        
+                        if (blockableMeshes.ContainsKey(blockID))
+                        {
+                            blockableLocalPos.x = x;
+                            blockableLocalPos.y = y;
+                            blockableLocalPos.z = z;
+                            CreateBlockable(blockID, blockableMeshes[blockID], blockableLocalPos);
+                        }
+                        else
+                        {
+                            var frontCheck = (z + 1 >= size && frontChunck.blocks[x, y, 0] == 0);
+                            var backCheck = (z - 1 < 0 && backChunck.blocks[x, y, size - 1] == 0);
+                            var rightCheck = (x + 1 >= size && rightChunck.blocks[0, y, z] == 0);
+                            var leftCheck = (x - 1 < 0 && leftChunck.blocks[size - 1, y, z] == 0);
+                            var topCheck = (y + 1 >= size && topChunck.blocks[x, 0, z] == 0);
+                            var bottomCheck = (y - 1 < 0 && bottomChunck.blocks[x, size - 1, z] == 0);
 
-                        var frontCheck = (z + 1 >= size && frontChunck.blocks[x, y, 0] == 0);
-                        var backCheck = (z - 1 < 0 && backChunck.blocks[x, y, size - 1] == 0);
-                        var rightCheck = (x + 1 >= size && rightChunck.blocks[0, y, z] == 0);
-                        var leftCheck = (x - 1 < 0 && leftChunck.blocks[size - 1, y, z] == 0);
-                        var topCheck = (y + 1 >= size && topChunck.blocks[x, 0, z] == 0);
-                        var bottomCheck = (y - 1 < 0 && bottomChunck.blocks[x, size - 1, z] == 0);
-
-                        if ((!(z + 1 >= size) && chunck.blocks[x, y, z + 1] == 0) || frontCheck)
-                        {
-                            CreateBlockSide(BlockSide.Front, x, y, z, b);
-                        }
-                        if ((!(z - 1 < 0) && chunck.blocks[x, y, z - 1] == 0) || backCheck)
-                        {
-                            CreateBlockSide(BlockSide.Back, x, y, z, b);
-                        }
-                        if ((!(x + 1 >= size) && chunck.blocks[x + 1, y, z] == 0) || rightCheck)
-                        {
-                            CreateBlockSide(BlockSide.Right, x, y, z, b);
-                        }
-                        if ((!(x - 1 < 0) && chunck.blocks[x - 1, y, z] == 0) || leftCheck)
-                        {
-                            CreateBlockSide(BlockSide.Left, x, y, z, b);
-                        }
-                        if ((!(y + 1 >= size) && chunck.blocks[x, y + 1, z] == 0) || topCheck)
-                        {
-                            CreateBlockSide(BlockSide.Top, x, y, z, b);
-                        }
-                        if ((!(y - 1 < 0) && chunck.blocks[x, y - 1, z] == 0) || bottomCheck)
-                        {
-                            CreateBlockSide(BlockSide.Bottom, x, y, z, b);
+                            if ((!(z + 1 >= size) && chunck.blocks[x, y, z + 1] == 0) || frontCheck)
+                            {
+                                CreateBlockSide(BlockSide.Front, x, y, z, b);
+                            }
+                            if ((!(z - 1 < 0) && chunck.blocks[x, y, z - 1] == 0) || backCheck)
+                            {
+                                CreateBlockSide(BlockSide.Back, x, y, z, b);
+                            }
+                            if ((!(x + 1 >= size) && chunck.blocks[x + 1, y, z] == 0) || rightCheck)
+                            {
+                                CreateBlockSide(BlockSide.Right, x, y, z, b);
+                            }
+                            if ((!(x - 1 < 0) && chunck.blocks[x - 1, y, z] == 0) || leftCheck)
+                            {
+                                CreateBlockSide(BlockSide.Left, x, y, z, b);
+                            }
+                            if ((!(y + 1 >= size) && chunck.blocks[x, y + 1, z] == 0) || topCheck)
+                            {
+                                CreateBlockSide(BlockSide.Top, x, y, z, b);
+                            }
+                            if ((!(y - 1 < 0) && chunck.blocks[x, y - 1, z] == 0) || bottomCheck)
+                            {
+                                CreateBlockSide(BlockSide.Bottom, x, y, z, b);
+                            }
                         }
                         //if (!(y + 1 >= size) && chunck.blocks[x, y + 1, z] == 0 || y + 1 >= size)
                         //{
