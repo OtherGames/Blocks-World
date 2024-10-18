@@ -1100,7 +1100,8 @@ public class WorldGenerator : MonoBehaviour
                             {
                                 CreateBlockSide(BlockSide.Left, x, y, z, b);
                             }
-                            if ((!(y + 1 >= size) && chunck.blocks[x, y + 1, z] == 0) || topCheck)
+                            topBlockID = chunck.blocks[x, y + 1, z];
+                            if ((!(y + 1 >= size) && topBlockID == 0) || topCheck || blockableMeshes.ContainsKey(topBlockID))
                             {
                                 CreateBlockSide(BlockSide.Top, x, y, z, b);
                             }
