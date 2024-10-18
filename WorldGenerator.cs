@@ -1076,12 +1076,13 @@ public class WorldGenerator : MonoBehaviour
                         {
                             var frontBlockID = frontChunck.blocks[x, y, 0];
                             var topBlockID = topChunck.blocks[x, 0, z];
+                            var bottomBlockID = bottomChunck.blocks[x, size - 1, z];
                             var frontCheck = (z + 1 >= size && frontBlockID is 0) || blockableMeshes.ContainsKey(frontBlockID);
                             var backCheck = (z - 1 < 0 && backChunck.blocks[x, y, size - 1] == 0);
                             var rightCheck = (x + 1 >= size && rightChunck.blocks[0, y, z] == 0);
                             var leftCheck = (x - 1 < 0 && leftChunck.blocks[size - 1, y, z] == 0);
                             var topCheck = (y + 1 >= size && topBlockID == 0) || blockableMeshes.ContainsKey(topBlockID);
-                            var bottomCheck = (y - 1 < 0 && bottomChunck.blocks[x, size - 1, z] == 0);
+                            var bottomCheck = (y - 1 < 0 && bottomBlockID == 0) || blockableMeshes.ContainsKey(bottomBlockID);
 
                             if ((!(z + 1 >= size) && chunck.blocks[x, y, z + 1] == 0) || frontCheck)
                             {
