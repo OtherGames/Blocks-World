@@ -1035,8 +1035,8 @@ public class WorldGenerator : MonoBehaviour
         
     }
 
-    
 
+    byte frontChunckBlockID, topChunckBlockID, bottomChunckBlockID, backChunckBlockID, rightChunckBlockID, leftChunckBlockID;
     public Mesh UpdateMesh(ChunckComponent chunck)
     {
         var frontChunck  = GetChunk(chunck.pos + (Vector3.forward * size));
@@ -1066,7 +1066,6 @@ public class WorldGenerator : MonoBehaviour
                         
                         if (blockableMeshes.ContainsKey(blockID))
                         {
-                            print("עûז םו גûחûגאורüסÿ?");
                             blockableLocalPos.x = x;
                             blockableLocalPos.y = y;
                             blockableLocalPos.z = z;
@@ -1074,21 +1073,25 @@ public class WorldGenerator : MonoBehaviour
                         }
                         else
                         {
-                            var frontBlockID = frontChunck.blocks[x, y, 0];
-                            var topBlockID = topChunck.blocks[x, 0, z];
-                            var bottomBlockID = bottomChunck.blocks[x, size - 1, z];
-                            var frontCheck = (z + 1 >= size && frontBlockID is 0) || blockableMeshes.ContainsKey(frontBlockID);
-                            var backCheck = (z - 1 < 0 && backChunck.blocks[x, y, size - 1] == 0);
-                            var rightCheck = (x + 1 >= size && rightChunck.blocks[0, y, z] == 0);
-                            var leftCheck = (x - 1 < 0 && leftChunck.blocks[size - 1, y, z] == 0);
-                            var topCheck = (y + 1 >= size && topBlockID == 0) || blockableMeshes.ContainsKey(topBlockID);
-                            var bottomCheck = (y - 1 < 0 && bottomBlockID == 0) || blockableMeshes.ContainsKey(bottomBlockID);
+                            frontChunckBlockID = frontChunck.blocks[x, y, 0];
+                            topChunckBlockID = topChunck.blocks[x, 0, z];
+                            bottomChunckBlockID = bottomChunck.blocks[x, size - 1, z];
+                            backChunckBlockID = backChunck.blocks[x, y, size - 1];
+                            rightChunckBlockID = rightChunck.blocks[0, y, z];
+                            leftChunckBlockID = leftChunck.blocks[size - 1, y, z];
 
-                            if ((!(z + 1 >= size) && chunck.blocks[x, y, z + 1] == 0) || frontCheck)
+                            var frontCheck = (z + 1 >= size && NeedCreateBlockSide(frontChunckBlockID));
+                            var backCheck = (z - 1 < 0 && NeedCreateBlockSide(backChunckBlockID));
+                            var rightCheck = (x + 1 >= size && NeedCreateBlockSide(rightChunckBlockID));
+                            var leftCheck = (x - 1 < 0 && NeedCreateBlockSide(leftChunckBlockID));
+                            var topCheck = (y + 1 >= size && NeedCreateBlockSide(topChunckBlockID));
+                            var bottomCheck = (y - 1 < 0 && NeedCreateBlockSide(bottomChunckBlockID));
+
+                            if ((!(z + 1 >= size) && NeedCreateBlockSide(chunck.blocks[x, y, z + 1])) || frontCheck)
                             {
                                 CreateBlockSide(BlockSide.Front, x, y, z, b);
                             }
-                            if ((!(z - 1 < 0) && chunck.blocks[x, y, z - 1] == 0) || backCheck)
+                            if ((!(z - 1 < 0) && NeedCreateBlockSide(chunck.blocks[x, y, z - 1])) || backCheck)
                             {
                                 CreateBlockSide(BlockSide.Back, x, y, z, b);
                             }
@@ -1109,14 +1112,7 @@ public class WorldGenerator : MonoBehaviour
                                 CreateBlockSide(BlockSide.Bottom, x, y, z, b);
                             }
                         }
-                        //if (!(y + 1 >= size) && chunck.blocks[x, y + 1, z] == 0 || y + 1 >= size)
-                        //{
-                        //    CreateBlockSide(BlockSide.Top, x, y, z, b);
-                        //}
-                        //if (!(y - 1 < 0) && chunck.blocks[x, y - 1, z] == 0)
-                        //{
-                        //    CreateBlockSide(BlockSide.Bottom, x, y, z, b);
-                        //}
+                        
                     }
                 }
             }
@@ -1149,6 +1145,15 @@ public class WorldGenerator : MonoBehaviour
         return mesh;
     }
 
+    public bool IsBlockable(byte blockID)
+    {
+        return blockableMeshes.ContainsKey(blockID);
+    }
+
+    public bool NeedCreateBlockSide(byte neighbourBlockID)
+    {
+        return neighbourBlockID is 0 || IsBlockable(neighbourBlockID);
+    }
 
     void DictionaryInits()
     {
