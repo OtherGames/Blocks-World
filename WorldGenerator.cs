@@ -1639,7 +1639,7 @@ public enum BlockType : byte
 /// Обычно в перечислениях с атрибутом [Flags] используется возведение значений
 /// в степень двойки (1, 2, 4, 8 и т.д.), чтобы каждое значение представляло
 /// отдельный бит. Это позволяет использовать побитовые операции.
-public enum RotationAxis { X = 1, Y = 2, Z = 4 }
+public enum RotationAxis : byte { X = 1, Y = 2, Z = 4 }
 
 public static class VectorExt
 {

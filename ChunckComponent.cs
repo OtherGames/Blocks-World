@@ -65,6 +65,23 @@ public class ChunckComponent
 
         return blockID;
     }
+
+    TurnBlockData turnBlockData;
+    public void AddTurnBlock(Vector3Int blockLocalPos, RotationAxis axis, int angle)
+    {
+        turnBlockData.angle = angle;
+        turnBlockData.axis = axis;
+
+        if (turnedBlocks.ContainsKey(blockLocalPos))
+        {            
+            turnedBlocks[blockLocalPos] = turnBlockData;
+        }
+        else
+        {
+            turnedBlocks.Add(blockLocalPos, turnBlockData);
+        }
+    }
+    
 }
 
 public enum ChunckState : byte
