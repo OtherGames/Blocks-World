@@ -1095,19 +1095,19 @@ public class WorldGenerator : MonoBehaviour
                             {
                                 CreateBlockSide(BlockSide.Back, x, y, z, b);
                             }
-                            if ((!(x + 1 >= size) && chunck.blocks[x + 1, y, z] == 0) || rightCheck)
+                            if ((!(x + 1 >= size) && NeedCreateBlockSide(chunck.blocks[x + 1, y, z])) || rightCheck)
                             {
                                 CreateBlockSide(BlockSide.Right, x, y, z, b);
                             }
-                            if ((!(x - 1 < 0) && chunck.blocks[x - 1, y, z] == 0) || leftCheck)
+                            if ((!(x - 1 < 0) && NeedCreateBlockSide(chunck.blocks[x - 1, y, z])) || leftCheck)
                             {
                                 CreateBlockSide(BlockSide.Left, x, y, z, b);
                             }
-                            if ((!(y + 1 >= size) && (chunck.blocks[x, y + 1, z] == 0 || blockableMeshes.ContainsKey(chunck.blocks[x, y + 1, z]))) || topCheck)
+                            if ((!(y + 1 >= size) && NeedCreateBlockSide(chunck.blocks[x, y + 1, z])) || topCheck)
                             {
                                 CreateBlockSide(BlockSide.Top, x, y, z, b);
                             }
-                            if ((!(y - 1 < 0) && chunck.blocks[x, y - 1, z] == 0) || bottomCheck)
+                            if ((!(y - 1 < 0) && NeedCreateBlockSide(chunck.blocks[x, y - 1, z])) || bottomCheck)
                             {
                                 CreateBlockSide(BlockSide.Bottom, x, y, z, b);
                             }
