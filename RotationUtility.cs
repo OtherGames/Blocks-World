@@ -32,11 +32,9 @@ public class RotationUtility
         return rotatedPoints;
     }
 
-    // ѕеречисление дл€ оси вращени€
-    public enum Axis { X, Y, Z }
 
     // ћетод дл€ поворота фигуры в плоскости вокруг выбранной оси
-    public static Vector3[] RotatePoints(Vector3[] points, float angleInDegrees, Axis rotationAxis)
+    public static Vector3[] RotatePoints(Vector3[] points, float angleInDegrees, RotationAxis rotationAxis)
     {
         // ѕреобразование угла в радианы
         float angleInRadians = angleInDegrees * Mathf.Deg2Rad;
@@ -55,21 +53,21 @@ public class RotationUtility
 
             switch (rotationAxis)
             {
-                case Axis.X:
+                case RotationAxis.X:
                     // ¬ращение вокруг оси X (измен€ютс€ Y и Z)
                     float newY_X = point.y * cosAngle - point.z * sinAngle;
                     float newZ_X = point.y * sinAngle + point.z * cosAngle;
                     rotatedPoints[i] = new Vector3(point.x, newY_X, newZ_X);
                     break;
 
-                case Axis.Y:
+                case RotationAxis.Y:
                     // ¬ращение вокруг оси Y (измен€ютс€ X и Z)
                     float newX_Y = point.x * cosAngle - point.z * sinAngle;
                     float newZ_Y = point.x * sinAngle + point.z * cosAngle;
                     rotatedPoints[i] = new Vector3(newX_Y, point.y, newZ_Y);
                     break;
 
-                case Axis.Z:
+                case RotationAxis.Z:
                     // ¬ращение вокруг оси Z (измен€ютс€ X и Y)
                     float newX_Z = point.x * cosAngle - point.y * sinAngle;
                     float newY_Z = point.x * sinAngle + point.y * cosAngle;

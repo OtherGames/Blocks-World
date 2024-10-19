@@ -19,6 +19,7 @@ public class ChunckComponent
     public ChunckState chunckState;
 
     public Dictionary<Vector3, NavMeshLink> links = new Dictionary<Vector3, NavMeshLink>();
+    public Dictionary<Vector3Int, TurnBlockData> turnedBlocks = new Dictionary<Vector3Int, TurnBlockData>();// Словарь который хранит информацию о повернутых блоках  
     public List<Vector3Int> grassBlocks = new List<Vector3Int>();
     
     public int size;
@@ -70,6 +71,13 @@ public enum ChunckState : byte
 {
     Generated     = 0,
     NotGenerated  = 1,
+}
+
+[System.Serializable]
+public struct TurnBlockData
+{
+    public int angle;
+    public RotationAxis axis;
 }
 
 [JsonObject]

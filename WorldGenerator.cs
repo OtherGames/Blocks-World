@@ -18,9 +18,11 @@ public class WorldGenerator : MonoBehaviour
     public ProceduralGeneration procedural;
     public Material mat;
     public int countGenerateByOneFrame = 1;
+    public bool saveMeshes;
 
     public Dictionary<Vector3Int, ChunckComponent> chuncks = new Dictionary<Vector3Int, ChunckComponent>();
     public Dictionary<byte, Mesh[]> blockableMeshes = new Dictionary<byte, Mesh[]>();
+    public Dictionary<byte, RotationAxis> turnableBlocks = new Dictionary<byte, RotationAxis>();
 
     public const int size = 16;
     public const int noiseScale = 100;
@@ -59,6 +61,12 @@ public class WorldGenerator : MonoBehaviour
         InitTriangulos();
 
         onReady?.Invoke();
+
+        if (testos)
+        {
+            AddBlockableMesh(1, testos);
+            AddTurnableBlock(1, RotationAxis.Y);
+        }
     }
 
     public void AddPlayer(Transform player)
@@ -856,11 +864,11 @@ public class WorldGenerator : MonoBehaviour
                             blockableLocalPos.x = x;
                             blockableLocalPos.y = y;
                             blockableLocalPos.z = z;
-                            CreateBlockableMesh(blockableMeshes[blockID], blockableLocalPos);
+                            CreateBlockableMesh(chunck, blockableMeshes[blockID], blockableLocalPos);
                         }
                         else
                         {
-                            if ((z + 1 >= size && procedural.GetBlockID(x + posX, y + posY, z + 1 + posZ) is 0 or 1) || (!(z + 1 >= size) && chunck.blocks[x, y, z + 1] == 0))
+                            if ((z + 1 >= size && NeedCreateBlockSide(procedural.GetBlockID(x + posX, y + posY, z + 1 + posZ))) || (!(z + 1 >= size) && NeedCreateBlockSide(chunck.blocks[x, y, z + 1])))
                             {
                                 CreateBlockSide(BlockSide.Front, x, y, z, b);
                             }
@@ -992,26 +1000,9 @@ public class WorldGenerator : MonoBehaviour
         //}
     }
 
-    private void JustAddMesh(Mesh mesh, Vector3 offset)
-    {
-        foreach (var triangle in mesh.triangles)
-        {
-            triangulos.Add(triangle + vertices.Count);
-        }
-        var meshVertices = mesh.vertices;
-        //meshVertices = RotationUtility.RotatePoints(meshVertices, 90, RotationUtility.Axis.X);
+    
 
-        foreach (var vrtx in meshVertices)
-        {
-            vertices.Add(vrtx + offset + blockableVertexOffset);
-        }
-        foreach (var item in mesh.uv)
-        {
-            uvs.Add(item);
-        }
-    }
-
-    public void CreateBlockableMesh(Mesh[] meshes, Vector3 offset)
+    public void CreateBlockableMesh(ChunckComponent chunck, Mesh[] meshes, Vector3 offset)
     {
         foreach (var mesh in meshes)
         {
@@ -1020,7 +1011,16 @@ public class WorldGenerator : MonoBehaviour
                 triangulos.Add(triangle + vertices.Count);
             }
             var meshVertices = mesh.vertices;
-            //meshVertices = RotationUtility.RotatePoints(meshVertices, 90, RotationUtility.Axis.X);
+            if (chunck.turnedBlocks.ContainsKey(offset.ToVecto3Int()))
+            {
+                var turnData = chunck.turnedBlocks[offset.ToVecto3Int()];
+                meshVertices = RotationUtility.RotatePoints
+                (
+                    meshVertices, 
+                    turnData.angle, 
+                    turnData.axis
+                );
+            }
 
             foreach (var vrtx in meshVertices)
             {
@@ -1031,8 +1031,6 @@ public class WorldGenerator : MonoBehaviour
                 uvs.Add(item);
             }
         }
-
-        
     }
 
 
@@ -1069,7 +1067,7 @@ public class WorldGenerator : MonoBehaviour
                             blockableLocalPos.x = x;
                             blockableLocalPos.y = y;
                             blockableLocalPos.z = z;
-                            CreateBlockableMesh(blockableMeshes[blockID], blockableLocalPos);
+                            CreateBlockableMesh(chunck, blockableMeshes[blockID], blockableLocalPos);
                         }
                         else
                         {
@@ -1318,6 +1316,11 @@ public class WorldGenerator : MonoBehaviour
             meshes[i] = filters[i].sharedMesh;
         }
         blockableMeshes.Add(blockID, meshes);
+    }
+
+    public void AddTurnableBlock(byte blockID, RotationAxis rotationAxis)
+    {
+        turnableBlocks.Add(blockID, rotationAxis);
     }
 
     public byte GeneratedBlockID(int x, int y, int z)
@@ -1596,7 +1599,6 @@ public class WorldGenerator : MonoBehaviour
     }
     float minValue = float.MaxValue;
     float maxValue = float.MinValue;
-    public bool saveMeshes;
 
     private void OnDestroy()
     {
@@ -1633,6 +1635,12 @@ public enum BlockType : byte
     Stone
 }
 
+[System.Flags]
+/// Обычно в перечислениях с атрибутом [Flags] используется возведение значений
+/// в степень двойки (1, 2, 4, 8 и т.д.), чтобы каждое значение представляло
+/// отдельный бит. Это позволяет использовать побитовые операции.
+public enum RotationAxis { X = 1, Y = 2, Z = 4 }
+
 public static class VectorExt
 {
     public static Vector3 ToGlobalBlockPos(this Vector3 pos)
@@ -1650,5 +1658,14 @@ public static class VectorExt
         pos.y = Mathf.RoundToInt(pos.y);
         pos.z = Mathf.RoundToInt(pos.z);
         return pos;
+    }
+
+    static Vector3Int toVector3Result;
+    public static Vector3Int ToVecto3Int(this Vector3 pos)
+    {
+        toVector3Result.x = Mathf.RoundToInt(pos.x);
+        toVector3Result.y = Mathf.RoundToInt(pos.y);
+        toVector3Result.z = Mathf.RoundToInt(pos.z);
+        return toVector3Result;
     }
 }

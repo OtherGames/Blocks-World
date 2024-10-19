@@ -117,4 +117,25 @@ public class MeshUtility
 
         return combinedMesh;
     }
+
+    private static void JustAddMesh(Mesh mesh, List<Vector3> vertices,
+        List<int> triangulos,
+        List<Vector2> uvs, Vector3 offset)
+    {
+        foreach (var triangle in mesh.triangles)
+        {
+            triangulos.Add(triangle + vertices.Count);
+        }
+        var meshVertices = mesh.vertices;
+        //meshVertices = RotationUtility.RotatePoints(meshVertices, 90, RotationUtility.Axis.X);
+
+        foreach (var vrtx in meshVertices)
+        {
+            vertices.Add(vrtx + offset + blockableVertexOffset);
+        }
+        foreach (var item in mesh.uv)
+        {
+            uvs.Add(item);
+        }
+    }
 }
