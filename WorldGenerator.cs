@@ -307,6 +307,7 @@ public class WorldGenerator : MonoBehaviour
         collider.sharedMesh = mesh;
         chunckGO.transform.position = new Vector3(posX, posY, posZ);
         chunckGO.transform.SetParent(transform, false);
+        chunckGO.isStatic = true;
 
         chunck.renderer = renderer;
         chunck.meshFilter = meshFilter;
@@ -1011,6 +1012,7 @@ public class WorldGenerator : MonoBehaviour
                 triangulos.Add(triangle + vertices.Count);
             }
             var meshVertices = mesh.vertices;
+            print($"Проверяем есть ли данные о повороте {offset.ToVecto3Int()} =-=-=- {chunck.turnedBlocks.ContainsKey(offset.ToVecto3Int())}");
             if (chunck.turnedBlocks.ContainsKey(offset.ToVecto3Int()))
             {
                 var turnData = chunck.turnedBlocks[offset.ToVecto3Int()];
