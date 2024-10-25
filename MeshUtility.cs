@@ -1,8 +1,114 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-public class MeshUtility
+public class MeshUtility : MonoBehaviour
 {
+    public static MeshUtility Single;
+
+    private void Awake()
+    {
+        Single = this;
+    }
+
+    public int chunkSize = 16;  // Размер чанка
+    public int chunkHeight = 16;  // Высота чанка
+
+    // Метод для упрощения чанка с учётом LOD
+    public Mesh SimplifyChunkMesh(Mesh originalMesh, float mergeThreshold = 0.1f)
+    {
+        // Списки для новых вершин, треугольников и UV
+        List<Vector3> newVertices = new List<Vector3>();
+        List<int> newTriangles = new List<int>();
+        List<Vector2> newUVs = new List<Vector2>();
+
+        // Карта для кластеров вершин
+        Dictionary<Vector3, Vector3> vertexClusters = new Dictionary<Vector3, Vector3>();
+
+        // Получаем исходные данные меша
+        Vector3[] vertices = originalMesh.vertices;
+        int[] triangles = originalMesh.triangles;
+        Vector2[] uvs = originalMesh.uv;
+
+        // Проходим по всем вершинам и объединяем их в кластеры
+        for (int i = 0; i < vertices.Length; i++)
+        {
+            Vector3 currentVertex = vertices[i];
+
+            if (!IsEdgeVertex(currentVertex))
+            {
+                // Объединяем вершины, которые находятся близко друг к другу
+                Vector3 clusterVertex = FindOrCreateCluster(vertexClusters, currentVertex, mergeThreshold);
+                vertices[i] = clusterVertex; // Заменяем вершину на её кластер
+            }
+        }
+
+        // Пройдем по треугольникам и создадим новый меш
+        for (int i = 0; i < triangles.Length; i += 3)
+        {
+            Vector3 v1 = vertices[triangles[i]];
+            Vector3 v2 = vertices[triangles[i + 1]];
+            Vector3 v3 = vertices[triangles[i + 2]];
+
+            // Проверяем, если треугольник не стал вырожденным (например, из-за объединения вершин)
+            if (v1 != v2 && v2 != v3 && v1 != v3)
+            {
+                AddTriangle(newVertices, newTriangles, newUVs, v1, v2, v3, uvs[triangles[i]], uvs[triangles[i + 1]], uvs[triangles[i + 2]]);
+            }
+        }
+
+        // Создаём новый меш с упрощённой геометрией
+        Mesh simplifiedMesh = new Mesh();
+        simplifiedMesh.vertices = newVertices.ToArray();
+        simplifiedMesh.triangles = newTriangles.ToArray();
+        simplifiedMesh.uv = newUVs.ToArray();
+        simplifiedMesh.RecalculateNormals();
+
+        return simplifiedMesh;
+    }
+
+    // Метод для создания или поиска кластера для вершины
+    private Vector3 FindOrCreateCluster(Dictionary<Vector3, Vector3> vertexClusters, Vector3 vertex, float threshold)
+    {
+        foreach (var clusterVertex in vertexClusters.Keys)
+        {
+            if (Vector3.Distance(vertex, clusterVertex) < threshold)
+            {
+                // Если вершина достаточно близка к кластеру, возвращаем кластерную вершину
+                return clusterVertex;
+            }
+        }
+
+        // Если кластер не найден, создаём новый кластер
+        vertexClusters[vertex] = vertex;
+        return vertex;
+    }
+
+    // Проверяем, является ли вершина границей чанка
+    private bool IsEdgeVertex(Vector3 vertex)
+    {
+        // Проверка, является ли вершина граничной
+        return vertex.x == 0 || vertex.x == chunkSize - 1 ||
+               vertex.y == 0 || vertex.y == chunkHeight - 1 ||
+               vertex.z == 0 || vertex.z == chunkSize - 1;
+    }
+
+    // Добавляем треугольник в новый меш
+    private void AddTriangle(List<Vector3> vertices, List<int> triangles, List<Vector2> uvs,
+        Vector3 v1, Vector3 v2, Vector3 v3, Vector2 uv1, Vector2 uv2, Vector2 uv3)
+    {
+        int index = vertices.Count;
+        vertices.Add(v1);
+        vertices.Add(v2);
+        vertices.Add(v3);
+        triangles.Add(index);
+        triangles.Add(index + 1);
+        triangles.Add(index + 2);
+        uvs.Add(uv1);
+        uvs.Add(uv2);
+        uvs.Add(uv3);
+    }
+
+    //=======================================================================
     static Vector3 blockableVertexOffset = new Vector3(-0.5f, 0.5f, 0.5f);
 
     // Метод для объединения всех SubMesh и добавления к уже существующему мешу

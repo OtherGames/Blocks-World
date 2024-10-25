@@ -62,11 +62,11 @@ public class WorldGenerator : MonoBehaviour
 
         onReady?.Invoke();
 
-        if (testos)
-        {
-            AddBlockableMesh(1, testos);
-            AddTurnableBlock(1, RotationAxis.Y);
-        }
+        //if (testos)
+        //{
+        //    AddBlockableMesh(1, testos);
+        //    AddTurnableBlock(1, RotationAxis.Y);
+        //}
     }
 
     public void AddPlayer(Transform player)
@@ -918,6 +918,8 @@ public class WorldGenerator : MonoBehaviour
         //mesh.MarkModified();
         mesh.MarkDynamic();
 
+        mesh = MeshUtility.Single.SimplifyChunkMesh(mesh, optimizeThresold);
+
 #if UNITY_EDITOR
         if (saveMeshes && vertices.Count > 0)
         {
@@ -932,6 +934,8 @@ public class WorldGenerator : MonoBehaviour
 
         return mesh;
     }
+
+    public float optimizeThresold = 1.1f;
 
     Vector3 blockableVertexOffset = new Vector3(-0.5f, 0.5f, 0.5f);
     private void CreateBlockable(byte blockID, Mesh mesh, Vector3 offset)
@@ -1012,7 +1016,7 @@ public class WorldGenerator : MonoBehaviour
                 triangulos.Add(triangle + vertices.Count);
             }
             var meshVertices = mesh.vertices;
-            print($"Проверяем есть ли данные о повороте {offset.ToVecto3Int()} =-=-=- {chunck.turnedBlocks.ContainsKey(offset.ToVecto3Int())}");
+            //print($"Проверяем есть ли данные о повороте {offset.ToVecto3Int()} =-=-=- {chunck.turnedBlocks.ContainsKey(offset.ToVecto3Int())}");
             if (chunck.turnedBlocks.ContainsKey(offset.ToVecto3Int()))
             {
                 var turnData = chunck.turnedBlocks[offset.ToVecto3Int()];
