@@ -46,6 +46,7 @@ public class WorldGenerator : MonoBehaviour
     public static UnityEvent onReady = new UnityEvent();
     public static UnityEvent<BlockData> onBlockPick = new UnityEvent<BlockData>();
     public static UnityEvent<BlockData> onBlockPlace = new UnityEvent<BlockData>();
+    public static UnityEvent<TurnedBlockData> onTurnedBlockPlace = new UnityEvent<TurnedBlockData>();
 
     private void Awake()
     {
@@ -837,6 +838,18 @@ public class WorldGenerator : MonoBehaviour
     {
         var blockData = new BlockData { pos = pos, ID = ID };
         onBlockPlace?.Invoke(blockData);
+    }
+
+    public void PlaceTurnedBlock(Vector3 worldBlockPos, byte blockID, float angle, RotationAxis axis)
+    {
+        var data = new TurnedBlockData
+        {
+            pos = worldBlockPos,
+            ID = blockID,
+            angle = angle,
+            axis = axis
+        };
+        onTurnedBlockPlace?.Invoke(data);
     }
 
     Vector3 blockableLocalPos;
