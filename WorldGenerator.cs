@@ -918,7 +918,8 @@ public class WorldGenerator : MonoBehaviour
         //mesh.MarkModified();
         mesh.MarkDynamic();
 
-        mesh = MeshUtility.Single.SimplifyChunkMesh(mesh, optimizeThresold);
+        //mesh = MeshUtility.Single.SimplifyChunkMesh(mesh, optimizeThresold);
+        //mesh = MeshOptimizer.OptimizeMesh(mesh);
 
 #if UNITY_EDITOR
         if (saveMeshes && vertices.Count > 0)
