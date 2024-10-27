@@ -6,6 +6,9 @@ using Newtonsoft;
 using Newtonsoft.Json;
 using UnityEngine.Events;
 
+using System;
+using System.Runtime.CompilerServices;
+
 public class ChunckComponent
 {
     public MeshRenderer renderer;
@@ -106,6 +109,8 @@ public class ChunckData
     public List<UserChunckData> usersChangedBlocks;
     [JsonProperty]
     public byte[,,] blocks;
+    [JsonProperty]
+    public List<JsonTurnedBlock> turnedBlocks;
 
     [JsonConstructor]
     private ChunckData() { }
@@ -141,6 +146,29 @@ public class ChunckData
         //}
     }
 
+    // ========== Эксперименты работы со структурами ===============
+    //public JsonTurnedBlock notFoundTurnedBlock = default;
+
+    ////[MethodImpl(MethodImplOptions.AggressiveInlining)]
+    //public ref JsonTurnedBlock GetTurnedBlock (Vector3 pos)
+    //{
+    //    for (int i = 0; i < turnedBlocks.Length; i++)
+    //    {
+    //        if (turnedBlocks[i].pos.Equals(pos))
+    //        {
+    //            return ref turnedBlocks[i];
+    //        }
+    //    }
+
+    //    return ref notFoundTurnedBlock;
+    //}
+
+    //public void AddTurnedBlock(JsonTurnedBlock turnedBlock)
+    //{
+
+    //}
+    // ==========================================================
+
     [JsonObject]
     public class UserChunckData
     {
@@ -151,8 +179,6 @@ public class ChunckData
 
         [JsonConstructor]
         public UserChunckData() { }
-
-        
     }
 
     [JsonObject]
@@ -192,5 +218,21 @@ public class ChunckData
 
         [JsonConstructor]
         public JsonBlockData() { }
+    }
+
+    [JsonObject]
+    public struct JsonTurnedBlock
+    {
+        public Vector3 pos;
+        public float angle;
+        public RotationAxis axis;
+
+        [JsonConstructor]
+        private JsonTurnedBlock(Vector3 localPos, TurnBlockData turnBlockData)
+        {
+            pos = localPos;
+            angle = turnBlockData.angle;
+            axis = turnBlockData.axis;
+        }
     }
 }
