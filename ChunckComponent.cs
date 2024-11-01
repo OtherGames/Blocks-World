@@ -119,6 +119,7 @@ public class ChunckData
     {
         changedBlocks = new List<JsonBlockData>();
         usersChangedBlocks = new List<UserChunckData>();
+        turnedBlocks = new List<JsonTurnedBlock>();
         blocks = chunck.blocks;
         //blocks = new List<List<byte>>();
 
