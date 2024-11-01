@@ -224,16 +224,48 @@ public class ChunckData
     [JsonObject]
     public struct JsonTurnedBlock
     {
-        public Vector3 pos;
+        public float posX;
+        public float posY;
+        public float posZ;
+
         public float angle;
         public RotationAxis axis;
 
-        [JsonConstructor]
-        private JsonTurnedBlock(Vector3 localPos, TurnBlockData turnBlockData)
+        //[JsonConstructor]
+        //private JsonTurnedBlock(Vector3 localPos, TurnBlockData turnBlockData)
+        //{
+        //    pos = localPos;
+        //    angle = turnBlockData.angle;
+        //    axis = turnBlockData.axis;
+        //}
+
+        public JsonTurnedBlock(Vector3 localPos, TurnBlockData turnBlockData)
         {
-            pos = localPos;
+            posX = localPos.x;
+            posY = localPos.y;
+            posZ = localPos.z;
             angle = turnBlockData.angle;
             axis = turnBlockData.axis;
+
+            pos = default;
+        }
+
+        [JsonIgnore]
+        Vector3 pos;
+        [JsonIgnore]
+        public Vector3 Pos
+        {
+            get
+            {
+                if (pos == default)
+                {
+                    pos.x = posX;
+                    pos.y = posY;
+                    pos.z = posZ;
+                }
+
+                return pos;
+            }
         }
     }
 }
