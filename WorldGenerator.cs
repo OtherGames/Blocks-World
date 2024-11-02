@@ -834,7 +834,7 @@ public class WorldGenerator : MonoBehaviour
         onBlockPick?.Invoke(blockData);
     }
 
-    public Vector3 ToLocalBlockPos(Vector3 globalBlockPos)
+    public Vector3Int ToLocalBlockPos(Vector3 globalBlockPos)
     {
         int xIdx = Mathf.FloorToInt(globalBlockPos.x / size);
         int zIdx = Mathf.FloorToInt(globalBlockPos.z / size);
@@ -846,7 +846,7 @@ public class WorldGenerator : MonoBehaviour
         int yBlock = (int)(globalBlockPos.y - chunkPos.y);
         int zBlock = (int)(globalBlockPos.z - chunkPos.z);
 
-        return new Vector3(xBlock, yBlock, zBlock);
+        return new Vector3Int(xBlock, yBlock, zBlock);
     }
 
     public void PlaceBlock(Vector3 pos, byte ID)
