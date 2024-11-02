@@ -1597,32 +1597,6 @@ public class WorldGenerator : MonoBehaviour
         ////////////////////////////////////////////////////////////////
 
         return blockID;
-
-        //Random.InitState(888);
-        //int k = 1000000;
-        //Vector3 offset = new Vector3(Random.value * k, Random.value * k, Random.value * k);
-
-        //Vector3 pos = new Vector3
-        //(
-        //    x + offset.x,
-        //    y + offset.y,
-        //    z + offset.z
-        //);
-        //float noiseX = Mathf.Abs((float)(pos.x + offset.x) / ebota);
-        //float noiseY = Mathf.Abs((float)(pos.y + offset.y) / ebota);
-        //float noiseZ = Mathf.Abs((float)(pos.z + offset.z) / ebota);
-        //#pragma warning disable CS0436 // Тип конфликтует с импортированным типом
-        //            var res = noise.snoise(new float3(noiseX, noiseY, noiseZ));//snoise(pos);
-        //#pragma warning restore CS0436 // Тип конфликтует с импортированным типом
-
-        //if (y < 3) res = 0.5f;
-
-        //if (res > 0.3f)
-        //{
-        //    return true;
-        //}
-
-
     }
 
     bool IsBlockChunk(int x, int y, int z)
@@ -1663,12 +1637,6 @@ public enum BlockSide : byte
     Bottom
 }
 
-public enum BlockType : byte
-{
-    Grass,
-    Dirt,
-    Stone
-}
 
 [System.Flags]
 /// Обычно в перечислениях с атрибутом [Flags] используется возведение значений
