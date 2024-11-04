@@ -15,6 +15,7 @@ public class WorldGenerator : MonoBehaviour
     [SerializeField] float navMeshVoxelSize = 0.18f;
     [SerializeField] public Mesh testoMesh;
     [SerializeField] public Transform testos;
+    [SerializeField] public Mesh testosCollider;
     public ProceduralGeneration procedural;
     public Material mat;
     public int countGenerateByOneFrame = 1;
@@ -67,11 +68,12 @@ public class WorldGenerator : MonoBehaviour
 
         onReady?.Invoke();
 
-        //if (testos)
-        //{
-        //    AddBlockableMesh(1, testos);
-        //    AddTurnableBlock(1, RotationAxis.Y);
-        //}
+        if (testos)
+        {
+            AddBlockableMesh(1, testos);
+            AddTurnableBlock(1, RotationAxis.Y);
+            AddBlockableColliderMesh(1, testosCollider);
+        }
     }
 
     public void AddPlayer(Transform player)
@@ -967,15 +969,30 @@ public class WorldGenerator : MonoBehaviour
         }
 #endif
 
-        var colliderMesh = new Mesh();
-        colliderMesh.vertices = verticesCollider.ToArray();
-        colliderMesh.triangles = triangulosCollider.ToArray();
-        colliderMesh.RecalculateBounds();
-        colliderMesh.RecalculateNormals();
-        colliderMesh.RecalculateTangents();
-        chunck.collider.sharedMesh = colliderMesh;
+        CreateColliderMesh(chunck, mesh);
 
         return mesh;
+    }
+
+    private void CreateColliderMesh(ChunckComponent chunk, Mesh renderMesh)
+    {
+        // ƒовольно груба€ проверка на совпадени€ меша рендера
+        // и меша коллайдера, если держать два меша, то сильно
+        // бьЄт по оперативе и нет смысла держать два одинаковых меша
+        if (vertices.Count == verticesCollider.Count)
+        {
+            chunk.collider.sharedMesh = renderMesh;
+        }
+        else
+        {
+            var colliderMesh = new Mesh();
+            colliderMesh.vertices = verticesCollider.ToArray();
+            colliderMesh.triangles = triangulosCollider.ToArray();
+            colliderMesh.RecalculateBounds();
+            colliderMesh.RecalculateNormals();
+            colliderMesh.RecalculateTangents();
+            chunk.collider.sharedMesh = colliderMesh;
+        }
     }
 
     public float optimizeThresold = 1.1f;
@@ -1054,7 +1071,12 @@ public class WorldGenerator : MonoBehaviour
     {
         bool hasTurn = chunck.turnedBlocks.ContainsKey(offset.ToVecto3Int());
         bool hasColliderMesh = blockableColliderMeshes.ContainsKey(blockID);
-        var turnData = chunck.turnedBlocks[offset.ToVecto3Int()];
+        TurnBlockData turnData = default;
+
+        if (hasTurn)
+        {
+            turnData = chunck.turnedBlocks[offset.ToVecto3Int()];
+        }
 
         // “ут много чего навороченно, некоторые вещи чисто ради оптимизации
         foreach (var mesh in meshes)
@@ -1246,13 +1268,7 @@ public class WorldGenerator : MonoBehaviour
             StartCoroutine(DelayableUpdateNavMesh(chunck));
         }
 
-        var colliderMesh = chunck.collider.sharedMesh;
-        colliderMesh.vertices = verticesCollider.ToArray();
-        colliderMesh.triangles = triangulosCollider.ToArray();
-        colliderMesh.RecalculateBounds();
-        colliderMesh.RecalculateNormals();
-        colliderMesh.RecalculateTangents();
-        chunck.collider.sharedMesh = colliderMesh;
+        CreateColliderMesh(chunck, mesh);
 
         return mesh;
     }
