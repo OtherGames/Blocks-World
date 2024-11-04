@@ -22,6 +22,7 @@ public class WorldGenerator : MonoBehaviour
 
     public Dictionary<Vector3Int, ChunckComponent> chuncks = new Dictionary<Vector3Int, ChunckComponent>();
     public Dictionary<byte, Mesh[]> blockableMeshes = new Dictionary<byte, Mesh[]>();
+    public Dictionary<byte, Mesh> blockableColliderMeshes = new Dictionary<byte, Mesh>();
     public Dictionary<byte, RotationAxis> turnableBlocks = new Dictionary<byte, RotationAxis>();
 
     public const int size = 16;
@@ -38,6 +39,9 @@ public class WorldGenerator : MonoBehaviour
     readonly List<Vector3> vertices = new();
     readonly List<int> triangulos = new();
     readonly List<Vector2> uvs = new();
+
+    readonly List<Vector3> verticesCollider = new();
+    readonly List<int> triangulosCollider = new();
 
     [SerializeField]
     List<Transform> players = new();
@@ -201,21 +205,23 @@ public class WorldGenerator : MonoBehaviour
 
         ChunckComponent.onBlocksSeted?.Invoke(chunck);
 
-        var mesh = GenerateMesh(chunck, chunckPosX, chunckPosY, chunckPosZ);
 
         var chunckGO = new GameObject($"Chunck {chunckPosX} {chunckPosY} {chunckPosZ}");
         var renderer = chunckGO.AddComponent<MeshRenderer>();
         var meshFilter = chunckGO.AddComponent<MeshFilter>();
         var collider = chunckGO.AddComponent<MeshCollider>();
-        renderer.material = mat;
-        meshFilter.mesh = mesh;
-        collider.sharedMesh = mesh;
-        chunckGO.transform.position = new Vector3(chunckPosX, chunckPosY, chunckPosZ);
-        chunckGO.transform.SetParent(transform, false);
-
         chunck.renderer = renderer;
         chunck.meshFilter = meshFilter;
         chunck.collider = collider;
+
+        var mesh = GenerateMesh(chunck, chunckPosX, chunckPosY, chunckPosZ);
+        renderer.material = mat;
+        meshFilter.mesh = mesh;
+        //collider.sharedMesh = mesh;
+        chunckGO.transform.position = new Vector3(chunckPosX, chunckPosY, chunckPosZ);
+        chunckGO.transform.SetParent(transform, false);
+
+        
 
         if (generateNavMesh)
         {
@@ -297,22 +303,23 @@ public class WorldGenerator : MonoBehaviour
 
         ChunckComponent.onBlocksSeted?.Invoke(chunck);
 
-        var mesh = GenerateMesh(chunck, posX, posY, posZ);
-
         var chunckGO = new GameObject($"Chunck {posX} {posY} {posZ}");
         var renderer = chunckGO.AddComponent<MeshRenderer>();
         var meshFilter = chunckGO.AddComponent<MeshFilter>();
         var collider = chunckGO.AddComponent<MeshCollider>();
+        chunck.renderer = renderer;
+        chunck.meshFilter = meshFilter;
+        chunck.collider = collider;
+
+        var mesh = GenerateMesh(chunck, posX, posY, posZ);
         renderer.material = mat;
         meshFilter.mesh = mesh;
-        collider.sharedMesh = mesh;
+        //collider.sharedMesh = mesh;
         chunckGO.transform.position = new Vector3(posX, posY, posZ);
         chunckGO.transform.SetParent(transform, false);
         chunckGO.isStatic = true;
 
-        chunck.renderer = renderer;
-        chunck.meshFilter = meshFilter;
-        chunck.collider = collider;
+        
 
         if (generateNavMesh)
         {
@@ -870,9 +877,8 @@ public class WorldGenerator : MonoBehaviour
     Vector3 blockableLocalPos;
     Mesh GenerateMesh(ChunckComponent chunck, int posX, int posY, int posZ)
     {
-        vertices.Clear();
-        triangulos.Clear();
-        uvs.Clear();
+        ClearMeshFields();
+        ClearColliderMeshData();
 
         Mesh mesh = new();
         mesh.Clear();
@@ -893,7 +899,7 @@ public class WorldGenerator : MonoBehaviour
                             blockableLocalPos.x = x;
                             blockableLocalPos.y = y;
                             blockableLocalPos.z = z;
-                            CreateBlockableMesh(chunck, blockableMeshes[blockID], blockableLocalPos);
+                            CreateBlockableMesh(chunck, blockableMeshes[blockID], blockableLocalPos, blockID);
                         }
                         else
                         {
@@ -960,6 +966,14 @@ public class WorldGenerator : MonoBehaviour
             UnityEditor.AssetDatabase.SaveAssets();
         }
 #endif
+
+        var colliderMesh = new Mesh();
+        colliderMesh.vertices = verticesCollider.ToArray();
+        colliderMesh.triangles = triangulosCollider.ToArray();
+        colliderMesh.RecalculateBounds();
+        colliderMesh.RecalculateNormals();
+        colliderMesh.RecalculateTangents();
+        chunck.collider.sharedMesh = colliderMesh;
 
         return mesh;
     }
@@ -1036,19 +1050,36 @@ public class WorldGenerator : MonoBehaviour
 
     
 
-    public void CreateBlockableMesh(ChunckComponent chunck, Mesh[] meshes, Vector3 offset)
+    public void CreateBlockableMesh(ChunckComponent chunck, Mesh[] meshes, Vector3 offset, byte blockID)
     {
+        bool hasTurn = chunck.turnedBlocks.ContainsKey(offset.ToVecto3Int());
+        bool hasColliderMesh = blockableColliderMeshes.ContainsKey(blockID);
+        var turnData = chunck.turnedBlocks[offset.ToVecto3Int()];
+
+        // Тут много чего навороченно, некоторые вещи чисто ради оптимизации
         foreach (var mesh in meshes)
         {
-            foreach (var triangle in mesh.triangles)
+            if (!hasColliderMesh)
             {
-                triangulos.Add(triangle + vertices.Count);
+                foreach (var triangle in mesh.triangles)
+                {
+                    triangulos.Add(triangle + vertices.Count);
+                    triangulosCollider.Add(triangle + verticesCollider.Count);
+                }
             }
-            var meshVertices = mesh.vertices;
-            //print($"Проверяем есть ли данные о повороте {offset.ToVecto3Int()} =-=-=- {chunck.turnedBlocks.ContainsKey(offset.ToVecto3Int())}");
-            if (chunck.turnedBlocks.ContainsKey(offset.ToVecto3Int()))
+            else
             {
-                var turnData = chunck.turnedBlocks[offset.ToVecto3Int()];
+                foreach (var triangle in mesh.triangles)
+                {
+                    triangulos.Add(triangle + vertices.Count);
+                }
+            }
+
+            var meshVertices = mesh.vertices;
+            
+            //print($"Проверяем есть ли данные о повороте {offset.ToVecto3Int()} =-=-=- {chunck.turnedBlocks.ContainsKey(offset.ToVecto3Int())}");
+            if (hasTurn)
+            {
                 meshVertices = RotationUtility.RotatePoints
                 (
                     meshVertices, 
@@ -1057,13 +1088,51 @@ public class WorldGenerator : MonoBehaviour
                 );
             }
 
-            foreach (var vrtx in meshVertices)
+            if (hasColliderMesh)
             {
-                vertices.Add(vrtx + offset + blockableVertexOffset);
+                foreach (var vrtx in meshVertices)
+                {
+                    vertices.Add(vrtx + offset + blockableVertexOffset);
+                }
             }
+            else
+            {
+                foreach (var vrtx in meshVertices)
+                {
+                    vertices.Add(vrtx + offset + blockableVertexOffset);
+                    verticesCollider.Add(vrtx + offset + blockableVertexOffset);
+                }
+            }
+
             foreach (var item in mesh.uv)
             {
                 uvs.Add(item);
+            }
+        }
+
+        if (hasColliderMesh)
+        {
+            var colliderMesh = blockableColliderMeshes[blockID];
+            foreach (var triangle in colliderMesh.triangles)
+            {
+                triangulosCollider.Add(triangle + verticesCollider.Count);
+            }
+
+            var colliderVertices = colliderMesh.vertices;
+
+            if (hasTurn)
+            {
+                colliderVertices = RotationUtility.RotatePoints
+                (
+                    colliderVertices,
+                    turnData.angle,
+                    turnData.axis
+                );
+            }
+
+            foreach (var vrtx in colliderVertices)
+            {
+                verticesCollider.Add(vrtx + offset + blockableVertexOffset);
             }
         }
     }
@@ -1082,6 +1151,8 @@ public class WorldGenerator : MonoBehaviour
         vertices.Clear();
         triangulos.Clear();
         uvs.Clear();
+
+        ClearColliderMeshData();
 
         Mesh mesh = chunck.meshFilter.mesh;//new();
         mesh.Clear();
@@ -1102,7 +1173,7 @@ public class WorldGenerator : MonoBehaviour
                             blockableLocalPos.x = x;
                             blockableLocalPos.y = y;
                             blockableLocalPos.z = z;
-                            CreateBlockableMesh(chunck, blockableMeshes[blockID], blockableLocalPos);
+                            CreateBlockableMesh(chunck, blockableMeshes[blockID], blockableLocalPos, blockID);
                         }
                         else
                         {
@@ -1175,7 +1246,21 @@ public class WorldGenerator : MonoBehaviour
             StartCoroutine(DelayableUpdateNavMesh(chunck));
         }
 
+        var colliderMesh = chunck.collider.sharedMesh;
+        colliderMesh.vertices = verticesCollider.ToArray();
+        colliderMesh.triangles = triangulosCollider.ToArray();
+        colliderMesh.RecalculateBounds();
+        colliderMesh.RecalculateNormals();
+        colliderMesh.RecalculateTangents();
+        chunck.collider.sharedMesh = colliderMesh;
+
         return mesh;
+    }
+
+    private void ClearColliderMeshData()
+    {
+        verticesCollider.Clear();
+        triangulosCollider.Clear();
     }
 
     public bool IsBlockable(byte blockID)
@@ -1286,6 +1371,28 @@ public class WorldGenerator : MonoBehaviour
         vertices.Add(new Vector3(x + vrtx[3].x, y + vrtx[3].y, z + vrtx[3].z)); // 4
 
         AddUVS(side, b);
+
+        CreateBlockSideColliderMesh(side, x, y, z);
+    }
+
+    private void CreateBlockSideColliderMesh(BlockSide side, int x, int y, int z)
+    {
+        List<Vector3> vrtx = blockVerticesSet[side];
+        List<int> trngls = blockTrianglesSet[side];
+        int offset = 1;
+
+        triangulosCollider.Add(trngls[0] - offset + verticesCollider.Count);
+        triangulosCollider.Add(trngls[1] - offset + verticesCollider.Count);
+        triangulosCollider.Add(trngls[2] - offset + verticesCollider.Count);
+
+        triangulosCollider.Add(trngls[3] - offset + verticesCollider.Count);
+        triangulosCollider.Add(trngls[4] - offset + verticesCollider.Count);
+        triangulosCollider.Add(trngls[5] - offset + verticesCollider.Count);
+
+        verticesCollider.Add(new Vector3(x + vrtx[0].x, y + vrtx[0].y, z + vrtx[0].z)); // 1
+        verticesCollider.Add(new Vector3(x + vrtx[1].x, y + vrtx[1].y, z + vrtx[1].z)); // 2
+        verticesCollider.Add(new Vector3(x + vrtx[2].x, y + vrtx[2].y, z + vrtx[2].z)); // 3
+        verticesCollider.Add(new Vector3(x + vrtx[3].x, y + vrtx[3].y, z + vrtx[3].z)); // 4
     }
 
     void AddUVS(BlockSide side, BlockUVS b)
@@ -1351,6 +1458,11 @@ public class WorldGenerator : MonoBehaviour
             meshes[i] = filters[i].sharedMesh;
         }
         blockableMeshes.Add(blockID, meshes);
+    }
+
+    public void AddBlockableColliderMesh(byte blockID, Mesh colliderMesh)
+    {
+        blockableColliderMeshes.Add(blockID, colliderMesh);
     }
 
     public void AddTurnableBlock(byte blockID, RotationAxis rotationAxis)
