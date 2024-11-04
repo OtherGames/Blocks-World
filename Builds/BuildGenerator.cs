@@ -75,7 +75,7 @@ public class BuildGenerator
         {
             var otherMesh = WorldGenerator.Inst.UpdateMesh(chunck);
             chunck.meshFilter.mesh = otherMesh;
-            chunck.collider.sharedMesh = otherMesh;
+            //chunck.collider.sharedMesh = otherMesh;
         }
         chuncksBeUpdate.Clear();
 

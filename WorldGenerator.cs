@@ -693,7 +693,7 @@ public class WorldGenerator : MonoBehaviour
     {
         var otherMesh = UpdateMesh(chunck);
         chunck.meshFilter.mesh = otherMesh;
-        chunck.collider.sharedMesh = otherMesh;
+        //chunck.collider.sharedMesh = otherMesh;
     }
 
     Vector3Int chunckKeyForGetChunck;
@@ -813,7 +813,7 @@ public class WorldGenerator : MonoBehaviour
 
         var mesh = UpdateMesh(chunck);//, (int)pos.x, (int)pos.y, (int)pos.z);
         chunck.meshFilter.mesh = mesh;
-        chunck.collider.sharedMesh = mesh;
+        //chunck.collider.sharedMesh = mesh;
 
         for (int p = 0; p < 6; p++)
         {
@@ -828,7 +828,7 @@ public class WorldGenerator : MonoBehaviour
 
                 var otherMesh = UpdateMesh(otherChunck);
                 otherChunck.meshFilter.mesh = otherMesh;
-                otherChunck.collider.sharedMesh = otherMesh;
+                //otherChunck.collider.sharedMesh = otherMesh;
             }
         }
 
