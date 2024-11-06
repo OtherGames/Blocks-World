@@ -22,7 +22,7 @@ public class ChunckComponent
     public ChunckState chunckState;
 
     public Dictionary<Vector3, NavMeshLink> links = new Dictionary<Vector3, NavMeshLink>();
-    public Dictionary<Vector3Int, TurnBlockData> turnedBlocks = new Dictionary<Vector3Int, TurnBlockData>();// Словарь который хранит информацию о повернутых блоках  
+    public Dictionary<Vector3Int, List<TurnBlockData>> turnedBlocks = new Dictionary<Vector3Int, List<TurnBlockData>>();// Словарь который хранит информацию о повернутых блоках  
     public List<Vector3Int> grassBlocks = new List<Vector3Int>();
     
     public int size;
@@ -76,12 +76,12 @@ public class ChunckComponent
         turnBlockData.axis = axis;
 
         if (turnedBlocks.ContainsKey(blockLocalPos))
-        {            
-            turnedBlocks[blockLocalPos] = turnBlockData;
+        {
+            turnedBlocks[blockLocalPos].Add(turnBlockData);
         }
         else
         {
-            turnedBlocks.Add(blockLocalPos, turnBlockData);
+            turnedBlocks.Add(blockLocalPos, new List<TurnBlockData>() { turnBlockData });
         }
     }
     
@@ -96,7 +96,7 @@ public enum ChunckState : byte
 [System.Serializable]
 public struct TurnBlockData
 {
-    public int angle;
+    public float angle;
     public RotationAxis axis;
 }
 

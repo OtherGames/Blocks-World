@@ -880,7 +880,7 @@ public class WorldGenerator : MonoBehaviour
     Mesh GenerateMesh(ChunckComponent chunck, int posX, int posY, int posZ)
     {
         ClearMeshFields();
-        ClearColliderMeshData();
+        ClearColliderMeshFields();
 
         Mesh mesh = new();
         mesh.Clear();
@@ -1065,17 +1065,16 @@ public class WorldGenerator : MonoBehaviour
         //}
     }
 
-    
 
+    List<TurnBlockData> turnsBlockData = new List<TurnBlockData>();
     public void CreateBlockableMesh(ChunckComponent chunck, Mesh[] meshes, Vector3 offset, byte blockID)
     {
         bool hasTurn = chunck.turnedBlocks.ContainsKey(offset.ToVecto3Int());
         bool hasColliderMesh = blockableColliderMeshes.ContainsKey(blockID);
-        TurnBlockData turnData = default;
-
+        
         if (hasTurn)
         {
-            turnData = chunck.turnedBlocks[offset.ToVecto3Int()];
+            turnsBlockData = chunck.turnedBlocks[offset.ToVecto3Int()];
         }
 
         // Тут много чего навороченно, некоторые вещи чисто ради оптимизации
@@ -1102,12 +1101,16 @@ public class WorldGenerator : MonoBehaviour
             //print($"Проверяем есть ли данные о повороте {offset.ToVecto3Int()} =-=-=- {chunck.turnedBlocks.ContainsKey(offset.ToVecto3Int())}");
             if (hasTurn)
             {
-                meshVertices = RotationUtility.RotatePoints
-                (
-                    meshVertices, 
-                    turnData.angle, 
-                    turnData.axis
-                );
+                foreach (var turnData in turnsBlockData)
+                {
+                    meshVertices = RotationUtility.RotatePoints
+                    (
+                        meshVertices,
+                        turnData.angle,
+                        turnData.axis
+                    );
+                }
+                
             }
 
             if (hasColliderMesh)
@@ -1144,12 +1147,15 @@ public class WorldGenerator : MonoBehaviour
 
             if (hasTurn)
             {
-                colliderVertices = RotationUtility.RotatePoints
-                (
-                    colliderVertices,
-                    turnData.angle,
-                    turnData.axis
-                );
+                foreach (var turnData in turnsBlockData)
+                {
+                    colliderVertices = RotationUtility.RotatePoints
+                    (
+                        colliderVertices,
+                        turnData.angle,
+                        turnData.axis
+                    );
+                }
             }
 
             foreach (var vrtx in colliderVertices)
@@ -1170,11 +1176,8 @@ public class WorldGenerator : MonoBehaviour
         var topChunck    = GetChunk(chunck.pos + (Vector3.up * size));
         var bottomChunck = GetChunk(chunck.pos + (Vector3.down * size));
 
-        vertices.Clear();
-        triangulos.Clear();
-        uvs.Clear();
-
-        ClearColliderMeshData();
+        ClearMeshFields();
+        ClearColliderMeshFields();
 
         Mesh mesh = chunck.meshFilter.mesh;//new();
         mesh.Clear();
@@ -1273,7 +1276,7 @@ public class WorldGenerator : MonoBehaviour
         return mesh;
     }
 
-    private void ClearColliderMeshData()
+    private void ClearColliderMeshFields()
     {
         verticesCollider.Clear();
         triangulosCollider.Clear();
