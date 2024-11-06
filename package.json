@@ -3,7 +3,7 @@
     "author": "Woger",
     "displayName": "Blocks World",
     "description": "Часть для создания блоковых игр отвечающая за генерацию мира на основе чанков",
-    "version": "1.0.7",
+    "version": "1.0.8",
     "keywords": [
         "WoM",
         "Minecraft",

@@ -810,6 +810,11 @@ public class WorldGenerator : MonoBehaviour
 
         byte blockID = chunck.blocks[xBlock, yBlock, zBlock];
         chunck.blocks[xBlock, yBlock, zBlock] = 0;
+        var blockLocalPos = new Vector3Int(xBlock, yBlock, zBlock);
+        if (chunck.turnedBlocks.ContainsKey(blockLocalPos))
+        {
+            chunck.turnedBlocks.Remove(blockLocalPos);
+        }
 
         var mesh = UpdateMesh(chunck);//, (int)pos.x, (int)pos.y, (int)pos.z);
         chunck.meshFilter.mesh = mesh;

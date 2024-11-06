@@ -70,7 +70,7 @@ public class ChunckComponent
     }
 
     TurnBlockData turnBlockData;
-    public void AddTurnBlock(Vector3Int blockLocalPos, int angle, RotationAxis axis)
+    public void AddTurnBlock(Vector3Int blockLocalPos, float angle, RotationAxis axis)
     {
         turnBlockData.angle = angle;
         turnBlockData.axis = axis;
