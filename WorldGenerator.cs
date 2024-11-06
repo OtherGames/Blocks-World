@@ -869,14 +869,13 @@ public class WorldGenerator : MonoBehaviour
         onBlockPlace?.Invoke(blockData);
     }
 
-    public void PlaceTurnedBlock(Vector3 worldBlockPos, byte blockID, float angle, RotationAxis axis)
+    public void PlaceTurnedBlock(Vector3 worldBlockPos, byte blockID, TurnBlockData[] turnsData)
     {
         var data = new TurnedBlockData
         {
             pos = worldBlockPos,
             ID = blockID,
-            angle = angle,
-            axis = axis
+            turnsBlockData = turnsData
         };
         onTurnedBlockPlace?.Invoke(data);
     }
