@@ -228,8 +228,7 @@ public class ChunckData
         public float posY;
         public float posZ;
 
-        public float angle;
-        public RotationAxis axis;
+        public TurnBlockData[] turnsBlockData;
 
         //[JsonConstructor]
         //private JsonTurnedBlock(Vector3 localPos, TurnBlockData turnBlockData)
@@ -239,13 +238,12 @@ public class ChunckData
         //    axis = turnBlockData.axis;
         //}
 
-        public JsonTurnedBlock(Vector3 localPos, float angle, RotationAxis axis)
+        public JsonTurnedBlock(Vector3 localPos, TurnBlockData[] turns)
         {
             posX = localPos.x;
             posY = localPos.y;
             posZ = localPos.z;
-            this.angle = angle;
-            this.axis = axis;
+            turnsBlockData = turns;
 
             pos = default;
         }
