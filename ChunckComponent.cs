@@ -91,7 +91,9 @@ public class ChunckComponent
 
     public void AddTurnBlock(Vector3Int blockLocalPos, TurnBlockData[] turnsData)
     {
-        var turnsBlockData = turnedBlocks[blockLocalPos];
+        // Бля, тут пизда, надо будет оптимизировать
+        // жуткая аллокация
+        var turnsBlockData = new List<TurnBlockData>();
         turnsBlockData.Clear();
         foreach (var item in turnsData)
         {
