@@ -84,7 +84,25 @@ public class ChunckComponent
             turnedBlocks.Add(blockLocalPos, new List<TurnBlockData>() { turnBlockData });
         }
     }
-    
+
+    public void AddTurnBlock(Vector3Int blockLocalPos, TurnBlockData[] turnsData)
+    {
+        if (turnedBlocks.ContainsKey(blockLocalPos))
+        {
+            var turnsBlockData = turnedBlocks[blockLocalPos];
+            turnsBlockData.Clear();
+            foreach (var item in turnsData)
+            {
+                turnsBlockData.Add(item);
+            }
+            turnedBlocks[blockLocalPos] = turnsBlockData;
+        }
+        else
+        {
+            turnedBlocks.Add(blockLocalPos, new List<TurnBlockData>() { turnBlockData });
+        }
+    }
+
 }
 
 public enum ChunckState : byte
