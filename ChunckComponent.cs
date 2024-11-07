@@ -60,13 +60,17 @@ public class ChunckComponent
 
         //Debug.Log($"{xBlock}|{yBlock}|{zBlock}");
         byte blockID = blocks[xBlock, yBlock, zBlock];
-        //blocks[xBlock, yBlock, zBlock] = 0;
-
-        //var mesh = WorldGenerator.Inst.UpdateMesh(this);//, (int)pos.x, (int)pos.y, (int)pos.z);
-        //meshFilter.mesh = mesh;
-        //collider.sharedMesh = mesh;
 
         return blockID;
+    }
+
+    public void SetBlock(Vector3 localBlockPos, byte blockID)
+    {
+        int xIdx = (int)localBlockPos.x;
+        int yIdx = (int)localBlockPos.y;
+        int zIdx = (int)localBlockPos.z;
+
+        blocks[xIdx, yIdx, zIdx] = blockID;
     }
 
     TurnBlockData turnBlockData;
