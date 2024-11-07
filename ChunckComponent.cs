@@ -91,19 +91,21 @@ public class ChunckComponent
 
     public void AddTurnBlock(Vector3Int blockLocalPos, TurnBlockData[] turnsData)
     {
+        var turnsBlockData = turnedBlocks[blockLocalPos];
+        turnsBlockData.Clear();
+        foreach (var item in turnsData)
+        {
+            turnsBlockData.Add(item);
+        }
+
         if (turnedBlocks.ContainsKey(blockLocalPos))
         {
-            var turnsBlockData = turnedBlocks[blockLocalPos];
-            turnsBlockData.Clear();
-            foreach (var item in turnsData)
-            {
-                turnsBlockData.Add(item);
-            }
+            
             turnedBlocks[blockLocalPos] = turnsBlockData;
         }
         else
         {
-            turnedBlocks.Add(blockLocalPos, new List<TurnBlockData>() { turnBlockData });
+            turnedBlocks.Add(blockLocalPos, turnsBlockData);
         }
     }
 
