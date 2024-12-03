@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c7d18d51ef290342b6e6ca10f6672f2, type: 3}
+  m_Name: Mountain
+  m_EditorClassIdentifier: 
+  scale: 1
+  octaves: 4
+  octavesSimplex: 3
+  frequencyFactor: 2
+  amplitudeFactor: 0.5
+  height: 100
+  smoothThreshold: 0.018
+  heightOffset: 10
+  localBiomeThreshold: 1
+  simplexThreshold: 0.1
+  simplexScale: 1
+  heightEbala: 10
+  sharpnessEbala: 3
+  zaebalo: 2
+  byBlockID: 0
+  blockID: 0
+  min: 999999
+  max: -999999
+  noiseValue: 0
+  thresholded: 0
+  biomePointData:
+    name: "\u0413\u043E\u0440\u0435\u0446"
+    biomeNoise: 0.3716067
+    noiseThreshold: 0.58
+    smoothOffset: 0.018
+    blockID: 0
+    pointType: 0
+    byBlockID: 0
+    thresholded: 0
+    yThreshold: 0
+    height: 0

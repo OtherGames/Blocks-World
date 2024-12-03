@@ -19,6 +19,7 @@ public class WorldGenerator : MonoBehaviour
     public ProceduralGeneration procedural;
     public Material mat;
     public int countGenerateByOneFrame = 1;
+    public bool useTestInit;
     public bool saveMeshes;
 
     public Dictionary<Vector3Int, ChunckComponent> chuncks = new Dictionary<Vector3Int, ChunckComponent>();
@@ -68,7 +69,7 @@ public class WorldGenerator : MonoBehaviour
 
         onReady?.Invoke();
 
-        if (testos)
+        if (useTestInit)
         {
             AddBlockableMesh(1, testos);
             AddTurnableBlock(1, RotationAxis.Y);
@@ -88,6 +89,7 @@ public class WorldGenerator : MonoBehaviour
     
     }
 
+    IEnumerable<Vector3Int> chuncksPositions;
     List<Vector3Int> checkingPoses     = new List<Vector3Int>();
     List<Vector3Int> notGeneratedPoses = new List<Vector3Int>();
     void DynamicCreateChunck()
@@ -147,7 +149,8 @@ public class WorldGenerator : MonoBehaviour
 
             int idx = 0;
             // Переделать без аллокаций Линки
-            foreach (var checkingKey in checkingPoses.OrderBy(p => (p - player.position).sqrMagnitude))
+            chuncksPositions = checkingPoses.OrderBy(p => (p - player.position).sqrMagnitude);
+            foreach (var checkingKey in chuncksPositions)
             {
                 var chunckKey = checkingKey;
                 CreateChunck(chunckKey.x, chunckKey.y, chunckKey.z);

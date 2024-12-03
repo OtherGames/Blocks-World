@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fec7127ad063e9b47a1f8da1c1ae7fe7, type: 3}
+  m_Name: Small Mountains
+  m_EditorClassIdentifier: 
+  scale: 1
+  thresold: 0.5
+  height: 300
+  heightCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.3513435
+      value: 0.1849696
+      inSlope: 1.8114575
+      outSlope: 1.8114575
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.25629115
+    - serializedVersion: 3
+      time: 0.6206299
+      value: 0.41132075
+      inSlope: 2.6636624
+      outSlope: 2.6636624
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0.8
+      inSlope: 2.434565
+      outSlope: 2.434565
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.18855377
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4

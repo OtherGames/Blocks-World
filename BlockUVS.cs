@@ -71,6 +71,8 @@ public struct BlockUVS
                 return new BlockUVS(4, 15);
             case 12:// Голубая Шэрст
                 return new BlockUVS(2, 4);
+            case 15:// Голубая Шэрст
+                return new BlockUVS(2, 11);
             case 14:// Какой-то камень
                 return new BlockUVS(8, 3);
             case 30:// Железная руда
@@ -84,9 +86,9 @@ public struct BlockUVS
             case 66:
                 return new BlockUVS(0, 1);
             case 88:// Engine
-                return new BlockUVS(14, 6);
-            case 90:// Actuator
-                return new BlockUVS(5, 2);
+                return new BlockUVS(2, 14);
+            case 90:// Песок
+                return new BlockUVS(2, 14);
             case 91:// Actuator Rotary
                 return new BlockUVS(5, 1);
             case 92:// Steering 
