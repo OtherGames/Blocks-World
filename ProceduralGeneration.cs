@@ -166,7 +166,7 @@ public class ProceduralGeneration : MonoBehaviour
                 if (GetBlockID(x, y, z, ref excludeRockSettings, out var outNoise) == 0)
                 {
                     mainNoise = outNoise;
-                    blockID = 3;// STONE_8_3;
+                    blockID = STONE_8_3;
                 }
             }
             //// ==========================================
