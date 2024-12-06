@@ -8,6 +8,10 @@ public class TestProceduralGeneration : ProceduralGeneration
 {
     [Space(38)]
 
+    [SerializeField] GenerateBlockIdSettings mainGeneration;
+
+    [Space(38)]
+
     [SerializeField] float scaleY = 1f;
     [SerializeField] float landScale = 100;
     [SerializeField] float thresold = 0.8f;
@@ -20,22 +24,8 @@ public class TestProceduralGeneration : ProceduralGeneration
 
     public override byte GetBlockID(int x, int y, int z)
     {
-        var settings = new GenerateBlockIdSettings()
-        {
-            noiseScale = landScale,
-            yCorrect = scaleY,
-            landThresold = thresold,
-            landHeight = 300,
-            landBump = 800,
-            landHeightSlice = slice,
-            randomFactor = randomFactor,
-
-            useLandHeight = useHeight,
-            useHeightSlice = useSlice,
-            useValuePower = useValuePower,
-        };
-
-        return GetBlockID(x, y, z, settings);
+      
+        return GetBlockID(x, y, z, ref mainGeneration);
     }
 
     public byte GetBlockooooID(int x, int y, int z)

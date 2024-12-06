@@ -209,7 +209,17 @@ namespace SimplexNoise
             else
             {
                 t0 *= t0;
-                n0 = t0 * t0 * grad(perm[ii + perm[jj + perm[kk]]], x0, y0, z0);
+                try
+                {
+                    n0 = t0 * t0 * grad(perm[ii + perm[jj + perm[kk]]], x0, y0, z0);
+
+                }
+                catch (System.Exception)
+                {
+                    UnityEngine.Debug.Log($"{ii} ### {jj} ### {kk}");
+                    throw;
+                }
+                //n0 = t0 * t0 * grad(perm[ii + perm[jj + perm[kk]]], x0, y0, z0);
             }
 
             float t1 = 0.6f - x1 * x1 - y1 * y1 - z1 * z1;
