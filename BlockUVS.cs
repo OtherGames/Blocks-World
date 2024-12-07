@@ -93,6 +93,8 @@ public struct BlockUVS
                 return new BlockUVS(5, 1);
             case 92:// Steering 
                 return new BlockUVS(4, 2);
+            case 94:// INTERWOVEN_STONE 
+                return new BlockUVS(9, 2); 
             case 100:// Простой верстак
                 return new BlockUVS(15, 0);
             case 101:// Верстак

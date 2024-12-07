@@ -22,6 +22,7 @@ public static class BLOCKS
     public const byte SAND = 90;
     public const byte ACTUATOR_ROTARY = 91;
     public const byte STEERING = 92;
+    public const byte INTERWOVEN_STONE = 94; 
     public const byte SIMPLE_WORKBENCH = 100;
 
 
