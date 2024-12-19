@@ -57,7 +57,8 @@ public class ProceduralGeneration : MonoBehaviour
             generationLayers[i].useScriptableGeneration = generationLayers[i].scriptableGeneration != null;
         }
 
-        if (generationLayers.Length > 0)
+        // HOT FIX
+        if (generationLayers.Length >= 4)
         {
             mountainGeneration = generationLayers[3].scriptableGeneration as MountainOctaves;
         }
