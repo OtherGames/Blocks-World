@@ -202,7 +202,8 @@ public class ProceduralGeneration : MonoBehaviour
 
         SetBiomsGenerateNoiseValues(x, y, z);
 
-        if (biomsPointsData[3].thresholded)// Выпала генерация гор
+        // TO DO на множественную интерполяцию
+        if (biomsPointsData.Length >= 4 && biomsPointsData[3].thresholded)// Выпала генерация гор
         {
             var yThreshold = mountainGeneration.height * averageNoise;
 
