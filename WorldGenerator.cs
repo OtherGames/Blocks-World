@@ -149,7 +149,8 @@ public class WorldGenerator : MonoBehaviour
 
             int idx = 0;
             // Переделать без аллокаций Линки
-            chuncksPositions = checkingPoses.OrderBy(p => (p - player.position).sqrMagnitude);
+            //chuncksPositions = checkingPoses.OrderBy(p => (p - player.position).sqrMagnitude);
+            chuncksPositions = SortPositionsByDistance(checkingPoses, player.position.ToVecto3Int());
             foreach (var checkingKey in chuncksPositions)
             {
                 var chunckKey = checkingKey;
@@ -167,6 +168,18 @@ public class WorldGenerator : MonoBehaviour
                 GenerateChunck(chunckKey);
             }
         }
+    }
+
+    public static List<Vector3Int> SortPositionsByDistance(List<Vector3Int> positions, Vector3Int playerPosition)
+    {
+        positions.Sort((pos1, pos2) =>
+        {
+            float distance1 = Vector3Int.Distance(pos1, playerPosition);
+            float distance2 = Vector3Int.Distance(pos2, playerPosition);
+            return distance1.CompareTo(distance2);
+        });
+
+        return positions;
     }
 
     private ChunckComponent GenerateChunck(Vector3Int chunckKey)
