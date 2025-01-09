@@ -174,8 +174,8 @@ public class WorldGenerator : MonoBehaviour
     {
         positions.Sort((pos1, pos2) =>
         {
-            float distance1 = Vector3Int.Distance(pos1, playerPosition);
-            float distance2 = Vector3Int.Distance(pos2, playerPosition);
+            float distance1 = (pos1 - playerPosition).sqrMagnitude;//Vector3Int.Distance(pos1, playerPosition);
+            float distance2 = (pos2 - playerPosition).sqrMagnitude;//Vector3Int.Distance(pos2, playerPosition);
             return distance1.CompareTo(distance2);
         });
 
@@ -777,6 +777,21 @@ public class WorldGenerator : MonoBehaviour
     {
         var chunck = GetChunk(globalPos);
         return chunck.GetBlockID(globalPos);
+    }
+
+    public Vector3Int ToLocalBlockPos(Vector3 worldPos)
+    {
+        int xIdx = Mathf.FloorToInt(worldPos.x / size);
+        int zIdx = Mathf.FloorToInt(worldPos.z / size);
+        int yIdx = Mathf.FloorToInt(worldPos.y / size);
+
+        var chunckPos = new Vector3Int(xIdx, yIdx, zIdx) * size;
+
+        int xBlock = (int)(worldPos.x - chunckPos.x);
+        int yBlock = (int)(worldPos.y - chunckPos.y);
+        int zBlock = (int)(worldPos.z - chunckPos.z);
+
+        return new Vector3Int(xBlock, yBlock, zBlock);
     }
 
     public void SetBlock(Vector3 globalPos, ChunckComponent chunck, byte blockID)
