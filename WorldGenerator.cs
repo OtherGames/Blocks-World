@@ -1929,6 +1929,9 @@ public class WorldGenerator : MonoBehaviour
 
                 foreach (var player in players)
                 {
+                    if (!player)
+                        continue;
+
                     for (int i = 0; i < componentsChunk.Count; i++)
                     {
                         var playerPos = player.position;
