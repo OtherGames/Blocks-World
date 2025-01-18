@@ -72,6 +72,8 @@ public class WorldGenerator : MonoBehaviour
         DictionaryInits();
         InitTriangulos();
 
+        DynamicDestroyChunks();
+
         onReady?.Invoke();
 
         if (useTestInit)
@@ -80,6 +82,7 @@ public class WorldGenerator : MonoBehaviour
             AddTurnableBlock(1, RotationAxis.Y);
             AddBlockableColliderMesh(1, testosCollider);
         }
+
     }
 
     public void AddPlayer(Transform player)
@@ -1902,6 +1905,52 @@ public class WorldGenerator : MonoBehaviour
         ////////////////////////////////////////////////////////////////
 
         return blockID;
+    }
+
+    private void DynamicDestroyChunks()
+    {
+        StartCoroutine(Routine());
+
+        IEnumerator Routine()
+        {
+            List<ChunckComponent> componentsChunk = new List<ChunckComponent>();
+            List<Vector3Int> keysChunk = new List<Vector3Int>();
+
+            while (true)
+            {
+                componentsChunk.Clear();
+                keysChunk.Clear();
+
+                foreach (var kvPair in chuncks)
+                {
+                    componentsChunk.Add(kvPair.Value);
+                    keysChunk.Add(kvPair.Key);
+                }
+
+                foreach (var player in players)
+                {
+                    for (int i = 0; i < componentsChunk.Count; i++)
+                    {
+                        var playerPos = player.position;
+                        var chunkPos = componentsChunk[i].meshFilter.transform.position;
+                        var dist = Vector3.Distance(playerPos, chunkPos);
+                        //print(dist);
+                        if (dist > viewChunck * size * 3)
+                        {
+                            //print(componentsChunk[i].meshFilter.gameObject);
+                            Destroy(componentsChunk[i].meshFilter.gameObject);
+                            chuncks.Remove(keysChunk[i]);
+                
+                        }
+
+                        yield return new WaitForEndOfFrame();
+                    }
+                }
+
+                yield return new WaitForEndOfFrame();
+
+            }
+        }
     }
 
     bool IsBlockChunk(int x, int y, int z)
