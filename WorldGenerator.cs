@@ -217,6 +217,7 @@ public class WorldGenerator : MonoBehaviour
 
                         if (chuncks.ContainsKey(chunkKey))
                         {
+                            asyncCreatingChunk = false;
                             yield break;
                         }
                     }
@@ -247,6 +248,7 @@ public class WorldGenerator : MonoBehaviour
 
             if (chuncks.ContainsKey(chunkKey))
             {
+                asyncCreatingChunk = false;
                 yield break;
             }
 
@@ -256,6 +258,7 @@ public class WorldGenerator : MonoBehaviour
 
             if (chuncks.ContainsKey(chunkKey))
             {
+                asyncCreatingChunk = false;
                 yield break;
             }
 
