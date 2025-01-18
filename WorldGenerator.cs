@@ -12,6 +12,7 @@ public class WorldGenerator : MonoBehaviour
     [SerializeField] bool generateNavMesh  = true;
     [SerializeField] bool generateNavLinks = true;
     [SerializeField] int viewChunck = 5;
+    [SerializeField] int asyncDistanceGenerate = 38;
     [SerializeField] float navMeshVoxelSize = 0.18f;
     [SerializeField] public Mesh testoMesh;
     [SerializeField] public Transform testos;
@@ -45,8 +46,9 @@ public class WorldGenerator : MonoBehaviour
     readonly List<Vector3> verticesCollider = new();
     readonly List<int> triangulosCollider = new();
 
-    [SerializeField]
-    List<Transform> players = new();
+    [SerializeField] List<Transform> players = new();
+
+    public bool asyncCreatingChunk;
 
     public static WorldGenerator Inst { get; set; }
     public static UnityEvent onReady = new UnityEvent();
@@ -123,6 +125,11 @@ public class WorldGenerator : MonoBehaviour
                 CreateChunck(key.x, key.y, key.z);
             }
 
+            if (asyncCreatingChunk)
+            {
+                return;
+            }
+
             checkingPoses.Clear();
             notGeneratedChuncks.Clear();
             for (float x = -viewDistance + pos.x; x < viewDistance + pos.x; x += size)
@@ -153,20 +160,133 @@ public class WorldGenerator : MonoBehaviour
             chuncksPositions = SortPositionsByDistance(checkingPoses, player.position.ToVecto3Int());
             foreach (var checkingKey in chuncksPositions)
             {
-                var chunckKey = checkingKey;
-                CreateChunck(chunckKey.x, chunckKey.y, chunckKey.z);
+                var centerChuk = checkingKey + Vector3Int.one * (size / 2);
+                var dist = Vector3.Distance(centerChuk, player.position);
+                if (dist < asyncDistanceGenerate)
+                {
+                    CreateChunck(checkingKey.x, checkingKey.y, checkingKey.z);
+                }
+                else
+                {
+                    CreateChunckAsync(checkingKey.x, checkingKey.y, checkingKey.z);
+                }
                 idx++;
-                if (idx > countGenerateByOneFrame)
+                if (idx >= countGenerateByOneFrame)
                 {
                     idx = 0;
                     return;
                 }
             }
 
-            foreach (var chunckKey in notGeneratedPoses)
+            //foreach (var chunckKey in notGeneratedPoses)
+            //{
+            //    GenerateChunck(chunckKey);
+            //    return;
+            //}
+        }
+    }
+
+    private void CreateChunckAsync(int posX, int posY, int posZ)
+    {
+        StartCoroutine(Async());
+
+        IEnumerator Async()
+        {
+            asyncCreatingChunk = true;
+
+            vertices?.Clear();
+            triangulos?.Clear();
+            uvs?.Clear();
+
+            var chunck = new ChunckComponent(posX, posY, posZ);
+
+            int worldX;
+            int worldY;
+            int worldZ;
+            if (!chunck.blocksLoaded)
             {
-                GenerateChunck(chunckKey);
+                for (int x = 0; x < size; x++)
+                {
+                    if(x % 6 == 0)
+                    {
+                        yield return new WaitForEndOfFrame();
+                    }
+
+                    for (int y = 0; y < size; y++)
+                    {
+                        for (int z = 0; z < size; z++)
+                        {
+                            worldX = x + posX;
+                            worldY = y + posY;
+                            worldZ = z + posZ;
+                            byte generatedBlockID = procedural.GetBlockID(worldX, worldY, worldZ);
+
+                            if (generatedBlockID == DIRT && procedural.GetBlockID(worldX, worldY + 1, worldZ) == 0)
+                            {
+                                chunck.blocks[x, y, z] = GRASS;
+                                chunck.grassBlocks.Add(new Vector3Int(worldX, worldY, worldZ));
+                            }
+                            else
+                            {
+                                chunck.blocks[x, y, z] = generatedBlockID;
+
+                            }
+                        }
+                    }
+                }
             }
+
+            ChunckComponent.onBlocksSeted?.Invoke(chunck);
+
+            yield return new WaitForEndOfFrame();
+
+            var chunckGO = new GameObject($"Chunck {posX} {posY} {posZ}");
+            var renderer = chunckGO.AddComponent<MeshRenderer>();
+            var meshFilter = chunckGO.AddComponent<MeshFilter>();
+            var collider = chunckGO.AddComponent<MeshCollider>();
+            chunck.renderer = renderer;
+            chunck.meshFilter = meshFilter;
+            chunck.collider = collider;
+
+            var mesh = GenerateMesh(chunck, posX, posY, posZ);
+            renderer.material = mat;
+            meshFilter.mesh = mesh;
+            //collider.sharedMesh = mesh;
+            chunckGO.transform.position = new Vector3(posX, posY, posZ);
+            chunckGO.transform.SetParent(transform, false);
+            chunckGO.isStatic = true;
+
+            yield return new WaitForEndOfFrame();
+
+            if (generateNavMesh)
+            {
+                //chunck.navMeshModifier = chunckGO.AddComponent<NavMeshModifier>();
+                chunck.meshSurface = chunckGO.AddComponent<NavMeshSurface>();
+                chunck.meshSurface.layerMask = navMeshLayer;
+                chunck.meshSurface.collectObjects = CollectObjects.Children;
+                chunck.meshSurface.useGeometry = UnityEngine.AI.NavMeshCollectGeometry.PhysicsColliders;
+                chunck.meshSurface.overrideVoxelSize = true;
+                chunck.meshSurface.voxelSize = navMeshVoxelSize;
+                chunck.meshSurface.overrideTileSize = true;
+                chunck.meshSurface.tileSize = 128;//64;
+                chunck.meshSurface.minRegionArea = 0.3f;
+                //chunck.meshSurface
+
+                StartCoroutine(DelayableBuildNavMesh(chunck));
+                //chunck.meshSurface.BuildNavMesh();
+
+                //UpdateNavMesh(chunck.meshSurface.navMeshData);
+            }
+
+
+
+            //count++;
+            //print(count);
+            chunckGO.layer = 7;
+
+            chuncks.Add(new(posX / size, posY / size, posZ / size), chunck);
+
+            asyncCreatingChunk = false;
         }
     }
 
@@ -996,6 +1116,12 @@ public class WorldGenerator : MonoBehaviour
 
     private void CreateColliderMesh(ChunckComponent chunk, Mesh renderMesh)
     {
+        if (renderMesh.vertexCount == 0)
+        {
+            chunk.collider.sharedMesh = null;
+            return;
+        }
+
         // Довольно грубая проверка на совпадения меша рендера
         // и меша коллайдера, если держать два меша, то сильно
         // бьёт по оперативе и нет смысла держать два одинаковых меша
