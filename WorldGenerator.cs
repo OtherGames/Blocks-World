@@ -12,7 +12,6 @@ public class WorldGenerator : MonoBehaviour
     [SerializeField] bool generateNavMesh  = true;
     [SerializeField] bool generateNavLinks = true;
     [SerializeField] int viewChunck = 5;
-    [SerializeField] int asyncDistanceGenerate = 38;
     [SerializeField] float navMeshVoxelSize = 0.18f;
     [SerializeField] public Mesh testoMesh;
     [SerializeField] public Transform testos;
@@ -22,6 +21,10 @@ public class WorldGenerator : MonoBehaviour
     public int countGenerateByOneFrame = 1;
     public bool useTestInit;
     public bool saveMeshes;
+
+    [Header("Async Generation Settings")]
+    [SerializeField] int asyncDistanceGenerate = 38;
+    [SerializeField] int getBlockIdAsyncFrequency = 6;
 
     public Dictionary<Vector3Int, ChunckComponent> chuncks = new Dictionary<Vector3Int, ChunckComponent>();
     public Dictionary<byte, Mesh[]> blockableMeshes = new Dictionary<byte, Mesh[]>();
@@ -199,6 +202,7 @@ public class WorldGenerator : MonoBehaviour
             uvs?.Clear();
 
             var chunck = new ChunckComponent(posX, posY, posZ);
+            var chunkKey = new Vector3Int(posX / size, posY / size, posZ / size);
 
             int worldX;
             int worldY;
@@ -207,9 +211,14 @@ public class WorldGenerator : MonoBehaviour
             {
                 for (int x = 0; x < size; x++)
                 {
-                    if(x % 6 == 0)
+                    if(x % getBlockIdAsyncFrequency == 0)
                     {
                         yield return new WaitForEndOfFrame();
+
+                        if (chuncks.ContainsKey(chunkKey))
+                        {
+                            yield break;
+                        }
                     }
 
                     for (int y = 0; y < size; y++)
@@ -236,9 +245,19 @@ public class WorldGenerator : MonoBehaviour
                 }
             }
 
+            if (chuncks.ContainsKey(chunkKey))
+            {
+                yield break;
+            }
+
             ChunckComponent.onBlocksSeted?.Invoke(chunck);
 
             yield return new WaitForEndOfFrame();
+
+            if (chuncks.ContainsKey(chunkKey))
+            {
+                yield break;
+            }
 
             var chunckGO = new GameObject($"Chunck {posX} {posY} {posZ}");
             var renderer = chunckGO.AddComponent<MeshRenderer>();
@@ -255,6 +274,10 @@ public class WorldGenerator : MonoBehaviour
             chunckGO.transform.position = new Vector3(posX, posY, posZ);
             chunckGO.transform.SetParent(transform, false);
             chunckGO.isStatic = true;
+
+            chunckGO.layer = 7;
+
+            chuncks.Add(chunkKey, chunck);
 
             yield return new WaitForEndOfFrame();
 
@@ -282,9 +305,7 @@ public class WorldGenerator : MonoBehaviour
 
             //count++;
             //print(count);
-            chunckGO.layer = 7;
-
-            chuncks.Add(new(posX / size, posY / size, posZ / size), chunck);
+            
 
             asyncCreatingChunk = false;
         }
@@ -833,6 +854,12 @@ public class WorldGenerator : MonoBehaviour
     }
 
     Vector3Int chunckKeyForGetChunck;
+    /// <summary>
+    /// Метод может вернуть null
+    /// </summary>
+    /// <param name="globalPosBlock"></param>
+    /// <param name="chunckKey"></param>
+    /// <returns></returns>
     public ChunckComponent GetChunk(Vector3 globalPosBlock, out Vector3Int chunckKey)
     {
         int xIdx = Mathf.FloorToInt(globalPosBlock.x / size);
