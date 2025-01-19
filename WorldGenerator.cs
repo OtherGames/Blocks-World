@@ -859,7 +859,7 @@ public class WorldGenerator : MonoBehaviour
         //chunck.collider.sharedMesh = otherMesh;
     }
 
-    public void UpdateChunkMeshAsync(ChunckComponent chunk)
+    public void UpdateChunkMeshAsync(ChunckComponent chunk, System.Action onComplete = null)
     {
         StartCoroutine(Async());
 
@@ -1005,6 +1005,8 @@ public class WorldGenerator : MonoBehaviour
             }
 
             CreateColliderMesh(chunk, mesh);
+
+            onComplete?.Invoke();
         }
     }
 
