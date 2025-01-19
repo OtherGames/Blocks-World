@@ -869,6 +869,7 @@ public class WorldGenerator : MonoBehaviour
             while (!chuncks.ContainsKey(chunckKey))
             {
                 yield return new WaitForEndOfFrame();
+                print(chunckKey * size);
             }
             var frontChunck = chuncks[chunckKey];
 
@@ -876,6 +877,8 @@ public class WorldGenerator : MonoBehaviour
             while (!chuncks.ContainsKey(chunckKey))
             {
                 yield return new WaitForEndOfFrame();
+                print(chunckKey * size);
+
             }
             var backChunck = chuncks[chunckKey];
 
@@ -883,6 +886,8 @@ public class WorldGenerator : MonoBehaviour
             while (!chuncks.ContainsKey(chunckKey))
             {
                 yield return new WaitForEndOfFrame();
+                print(chunckKey * size);
+
             }
             var rightChunck = chuncks[chunckKey];
 
@@ -890,6 +895,8 @@ public class WorldGenerator : MonoBehaviour
             while (!chuncks.ContainsKey(chunckKey))
             {
                 yield return new WaitForEndOfFrame();
+                print(chunckKey * size);
+
             }
             var leftChunck = chuncks[chunckKey];
 
@@ -897,6 +904,8 @@ public class WorldGenerator : MonoBehaviour
             while (!chuncks.ContainsKey(chunckKey))
             {
                 yield return new WaitForEndOfFrame();
+                print(chunckKey * size);
+
             }
             var topChunck = chuncks[chunckKey];
 
@@ -904,6 +913,8 @@ public class WorldGenerator : MonoBehaviour
             while (!chuncks.ContainsKey(chunckKey))
             {
                 yield return new WaitForEndOfFrame();
+                print(chunckKey * size);
+
             }
             var bottomChunck = chuncks[chunckKey];
 
