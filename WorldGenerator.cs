@@ -1081,8 +1081,8 @@ public class WorldGenerator : MonoBehaviour
     public Vector3Int WorldPosToChunckKey(Vector3 worldPos)
     {
         convertToChunckKey.x = Mathf.FloorToInt(worldPos.x / size);
-        convertToChunckKey.y = Mathf.FloorToInt(worldPos.z / size);
-        convertToChunckKey.z = Mathf.FloorToInt(worldPos.y / size);
+        convertToChunckKey.y = Mathf.FloorToInt(worldPos.y / size);
+        convertToChunckKey.z = Mathf.FloorToInt(worldPos.z / size);
         return convertToChunckKey;
     }
 
