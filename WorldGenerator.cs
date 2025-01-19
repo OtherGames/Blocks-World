@@ -2100,7 +2100,7 @@ public class WorldGenerator : MonoBehaviour
 
                 foreach (var player in players)
                 {
-                    if (!player)
+                    if (player.gameObject == null)
                         continue;
 
                     for (int i = 0; i < componentsChunk.Count; i++)
