@@ -216,7 +216,7 @@ public class WorldGenerator : MonoBehaviour
                 {
                     if(x % getBlockIdAsyncFrequency == 0)
                     {
-                        yield return new WaitForEndOfFrame();
+                        yield return null;
 
                         if (chuncks.ContainsKey(chunkKey))
                         {
@@ -257,7 +257,7 @@ public class WorldGenerator : MonoBehaviour
 
             ChunckComponent.onBlocksSeted?.Invoke(chunck);
 
-            yield return new WaitForEndOfFrame();
+            yield return null;
 
             if (chuncks.ContainsKey(chunkKey))
             {
@@ -285,7 +285,7 @@ public class WorldGenerator : MonoBehaviour
 
             chuncks.Add(chunkKey, chunck);
 
-            yield return new WaitForEndOfFrame();
+            yield return null;
 
             if (generateNavMesh)
             {
@@ -871,7 +871,7 @@ public class WorldGenerator : MonoBehaviour
             var chunckKey = WorldPosToChunckKey(chunk.pos + (Vector3.forward * size));
             while (!chuncks.ContainsKey(chunckKey))
             {
-                yield return new WaitForEndOfFrame();
+                yield return null;
                 //if(chunk.pos == ebobo)
                 //print(chunckKey * size);
             }
@@ -880,7 +880,7 @@ public class WorldGenerator : MonoBehaviour
             chunckKey = WorldPosToChunckKey(chunk.pos + (Vector3.back * size));
             while (!chuncks.ContainsKey(chunckKey))
             {
-                yield return new WaitForEndOfFrame();
+                yield return null;
                 //if (chunk.pos == ebobo)
                 //    print(chunckKey * size);
 
@@ -890,7 +890,7 @@ public class WorldGenerator : MonoBehaviour
             chunckKey = WorldPosToChunckKey(chunk.pos + (Vector3.right * size));
             while (!chuncks.ContainsKey(chunckKey))
             {
-                yield return new WaitForEndOfFrame();
+                yield return null;
                 //if (chunk.pos == ebobo)
                 //    print(chunckKey * size);
 
@@ -900,7 +900,7 @@ public class WorldGenerator : MonoBehaviour
             chunckKey = WorldPosToChunckKey(chunk.pos + (Vector3.left * size));
             while (!chuncks.ContainsKey(chunckKey))
             {
-                yield return new WaitForEndOfFrame();
+                yield return null;
                 //if (chunk.pos == ebobo)
                 //    print(chunckKey * size);
 
@@ -910,7 +910,7 @@ public class WorldGenerator : MonoBehaviour
             chunckKey = WorldPosToChunckKey(chunk.pos + (Vector3.up * size));
             while (!chuncks.ContainsKey(chunckKey))
             {
-                yield return new WaitForEndOfFrame();
+                yield return null;
                 //if (chunk.pos == ebobo)
                 //    print(chunckKey * size);
 
@@ -920,7 +920,7 @@ public class WorldGenerator : MonoBehaviour
             chunckKey = WorldPosToChunckKey(chunk.pos + (Vector3.down * size));
             while (!chuncks.ContainsKey(chunckKey))
             {
-                yield return new WaitForEndOfFrame();
+                yield return null;
                 //if (chunk.pos == ebobo)
                 //    print(chunckKey * size);
 
@@ -2117,11 +2117,11 @@ public class WorldGenerator : MonoBehaviour
                 
                         }
 
-                        yield return new WaitForEndOfFrame();
+                        yield return null;
                     }
                 }
 
-                yield return new WaitForEndOfFrame();
+                yield return null;
 
             }
         }
