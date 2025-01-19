@@ -861,7 +861,9 @@ public class WorldGenerator : MonoBehaviour
 
     public void UpdateChunkMeshAsync(ChunckComponent chunk, System.Action onComplete = null)
     {
+        print($"Пробуем обновить чанк {chunk.pos}");
         StartCoroutine(Async());
+        var ebobo = new Vector3(-240, 16, 128);
 
         IEnumerator Async()
         {
@@ -869,6 +871,7 @@ public class WorldGenerator : MonoBehaviour
             while (!chuncks.ContainsKey(chunckKey))
             {
                 yield return new WaitForEndOfFrame();
+                if(chunk.pos == ebobo)
                 print(chunckKey * size);
             }
             var frontChunck = chuncks[chunckKey];
@@ -877,7 +880,9 @@ public class WorldGenerator : MonoBehaviour
             while (!chuncks.ContainsKey(chunckKey))
             {
                 yield return new WaitForEndOfFrame();
-                print(chunckKey * size);
+                if (chunk.pos == ebobo)
+
+                    print(chunckKey * size);
 
             }
             var backChunck = chuncks[chunckKey];
@@ -886,7 +891,9 @@ public class WorldGenerator : MonoBehaviour
             while (!chuncks.ContainsKey(chunckKey))
             {
                 yield return new WaitForEndOfFrame();
-                print(chunckKey * size);
+                if (chunk.pos == ebobo)
+
+                    print(chunckKey * size);
 
             }
             var rightChunck = chuncks[chunckKey];
@@ -895,7 +902,9 @@ public class WorldGenerator : MonoBehaviour
             while (!chuncks.ContainsKey(chunckKey))
             {
                 yield return new WaitForEndOfFrame();
-                print(chunckKey * size);
+                if (chunk.pos == ebobo)
+
+                    print(chunckKey * size);
 
             }
             var leftChunck = chuncks[chunckKey];
@@ -904,7 +913,9 @@ public class WorldGenerator : MonoBehaviour
             while (!chuncks.ContainsKey(chunckKey))
             {
                 yield return new WaitForEndOfFrame();
-                print(chunckKey * size);
+                if (chunk.pos == ebobo)
+
+                    print(chunckKey * size);
 
             }
             var topChunck = chuncks[chunckKey];
@@ -913,7 +924,9 @@ public class WorldGenerator : MonoBehaviour
             while (!chuncks.ContainsKey(chunckKey))
             {
                 yield return new WaitForEndOfFrame();
-                print(chunckKey * size);
+                if (chunk.pos == ebobo)
+
+                    print(chunckKey * size);
 
             }
             var bottomChunck = chuncks[chunckKey];
