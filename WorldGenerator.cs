@@ -866,7 +866,7 @@ public class WorldGenerator : MonoBehaviour
 
         IEnumerator Async()
         {
-            var ebobo = new Vector3(-240, 16, 128);
+            var ebobo = new Vector3(-240, 16, -128);
 
             var chunckKey = WorldPosToChunckKey(chunk.pos + (Vector3.forward * size));
             while (!chuncks.ContainsKey(chunckKey))
