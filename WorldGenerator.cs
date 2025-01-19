@@ -859,6 +859,155 @@ public class WorldGenerator : MonoBehaviour
         //chunck.collider.sharedMesh = otherMesh;
     }
 
+    public void UpdateChunkMeshAsync(ChunckComponent chunk)
+    {
+        StartCoroutine(Async());
+
+        IEnumerator Async()
+        {
+            var chunckKey = WorldPosToChunckKey(chunk.pos + (Vector3.forward * size));
+            while (!chuncks.ContainsKey(chunckKey))
+            {
+                yield return new WaitForEndOfFrame();
+            }
+            var frontChunck = chuncks[chunckKey];
+
+            chunckKey = WorldPosToChunckKey(chunk.pos + (Vector3.back * size));
+            while (!chuncks.ContainsKey(chunckKey))
+            {
+                yield return new WaitForEndOfFrame();
+            }
+            var backChunck = chuncks[chunckKey];
+
+            chunckKey = WorldPosToChunckKey(chunk.pos + (Vector3.right * size));
+            while (!chuncks.ContainsKey(chunckKey))
+            {
+                yield return new WaitForEndOfFrame();
+            }
+            var rightChunck = chuncks[chunckKey];
+
+            chunckKey = WorldPosToChunckKey(chunk.pos + (Vector3.left * size));
+            while (!chuncks.ContainsKey(chunckKey))
+            {
+                yield return new WaitForEndOfFrame();
+            }
+            var leftChunck = chuncks[chunckKey];
+
+            chunckKey = WorldPosToChunckKey(chunk.pos + (Vector3.up * size));
+            while (!chuncks.ContainsKey(chunckKey))
+            {
+                yield return new WaitForEndOfFrame();
+            }
+            var topChunck = chuncks[chunckKey];
+
+            chunckKey = WorldPosToChunckKey(chunk.pos + (Vector3.down * size));
+            while (!chuncks.ContainsKey(chunckKey))
+            {
+                yield return new WaitForEndOfFrame();
+            }
+            var bottomChunck = chuncks[chunckKey];
+
+            ClearMeshFields();
+            ClearColliderMeshFields();
+
+            Mesh mesh = chunk.meshFilter.mesh;//new();
+            mesh.Clear();
+
+            for (int x = 0; x < size; x++)
+            {
+                for (int y = 0; y < size; y++)
+                {
+                    for (int z = 0; z < size; z++)
+                    {
+                        var blockID = chunk.blocks[x, y, z];
+                        if (blockID > 0)
+                        {
+                            BlockUVS b = BlockUVS.GetBlock(chunk.blocks[x, y, z]); //new(0, 15, 3, 15, 2, 15);
+
+                            if (blockableMeshes.ContainsKey(blockID))
+                            {
+                                blockableLocalPos.x = x;
+                                blockableLocalPos.y = y;
+                                blockableLocalPos.z = z;
+                                CreateBlockableMesh(chunk, blockableMeshes[blockID], blockableLocalPos, blockID);
+                            }
+                            else
+                            {
+                                frontChunckBlockID = frontChunck.blocks[x, y, 0];
+                                topChunckBlockID = topChunck.blocks[x, 0, z];
+                                bottomChunckBlockID = bottomChunck.blocks[x, size - 1, z];
+                                backChunckBlockID = backChunck.blocks[x, y, size - 1];
+                                rightChunckBlockID = rightChunck.blocks[0, y, z];
+                                leftChunckBlockID = leftChunck.blocks[size - 1, y, z];
+
+                                var frontCheck = (z + 1 >= size && NeedCreateBlockSide(frontChunckBlockID));
+                                var backCheck = (z - 1 < 0 && NeedCreateBlockSide(backChunckBlockID));
+                                var rightCheck = (x + 1 >= size && NeedCreateBlockSide(rightChunckBlockID));
+                                var leftCheck = (x - 1 < 0 && NeedCreateBlockSide(leftChunckBlockID));
+                                var topCheck = (y + 1 >= size && NeedCreateBlockSide(topChunckBlockID));
+                                var bottomCheck = (y - 1 < 0 && NeedCreateBlockSide(bottomChunckBlockID));
+
+                                if ((!(z + 1 >= size) && NeedCreateBlockSide(chunk.blocks[x, y, z + 1])) || frontCheck)
+                                {
+                                    CreateBlockSide(BlockSide.Front, x, y, z, b);
+                                }
+                                if ((!(z - 1 < 0) && NeedCreateBlockSide(chunk.blocks[x, y, z - 1])) || backCheck)
+                                {
+                                    CreateBlockSide(BlockSide.Back, x, y, z, b);
+                                }
+                                if ((!(x + 1 >= size) && NeedCreateBlockSide(chunk.blocks[x + 1, y, z])) || rightCheck)
+                                {
+                                    CreateBlockSide(BlockSide.Right, x, y, z, b);
+                                }
+                                if ((!(x - 1 < 0) && NeedCreateBlockSide(chunk.blocks[x - 1, y, z])) || leftCheck)
+                                {
+                                    CreateBlockSide(BlockSide.Left, x, y, z, b);
+                                }
+                                if ((!(y + 1 >= size) && NeedCreateBlockSide(chunk.blocks[x, y + 1, z])) || topCheck)
+                                {
+                                    CreateBlockSide(BlockSide.Top, x, y, z, b);
+                                }
+                                if ((!(y - 1 < 0) && NeedCreateBlockSide(chunk.blocks[x, y - 1, z])) || bottomCheck)
+                                {
+                                    CreateBlockSide(BlockSide.Bottom, x, y, z, b);
+                                }
+                            }
+
+                        }
+                    }
+                }
+            }
+
+            if (vertices.Count > 65535)
+            {
+                mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+            }
+            else
+            {
+                mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt16;
+            }
+
+            mesh.vertices = vertices.ToArray();
+            mesh.triangles = triangulos.ToArray();
+            mesh.uv = uvs.ToArray();
+
+            mesh.RecalculateBounds();
+            mesh.RecalculateNormals();
+            mesh.RecalculateTangents();
+            mesh.OptimizeReorderVertexBuffer();
+            mesh.Optimize();
+
+            chunk.meshFilter.mesh = mesh;
+
+            if (generateNavMesh)
+            {
+                StartCoroutine(DelayableUpdateNavMesh(chunk));
+            }
+
+            CreateColliderMesh(chunk, mesh);
+        }
+    }
+
     Vector3Int chunckKeyForGetChunck;
     /// <summary>
     /// Метод может вернуть null
