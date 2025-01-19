@@ -863,10 +863,11 @@ public class WorldGenerator : MonoBehaviour
     {
         print($"Пробуем обновить чанк {chunk.pos}");
         StartCoroutine(Async());
-        var ebobo = new Vector3(-240, 16, 128);
 
         IEnumerator Async()
         {
+            var ebobo = new Vector3(-240, 16, 128);
+
             var chunckKey = WorldPosToChunckKey(chunk.pos + (Vector3.forward * size));
             while (!chuncks.ContainsKey(chunckKey))
             {
