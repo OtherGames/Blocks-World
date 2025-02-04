@@ -1290,10 +1290,10 @@ public class WorldGenerator : MonoBehaviour
         vertices.CopyTo(verArr);
 
         mesh.vertices = verArr;
-        
+        SetTrianglos(mesh, triangulos);
 
         //mesh.vertices = vertices.ToArray();
-        mesh.triangles = triangulos.ToArray();
+        //mesh.triangles = triangulos.ToArray();
         mesh.uv = uvs.ToArray();
 
 
@@ -1323,6 +1323,13 @@ public class WorldGenerator : MonoBehaviour
         CreateColliderMesh(chunck, mesh);
 
         return mesh;
+    }
+
+    private void SetTrianglos(Mesh mesh, List<int> trianglos)
+    {
+        var triArr = new int[trianglos.Count];
+        trianglos.CopyTo(triArr);
+        mesh.triangles = triArr;
     }
 
     private void CreateColliderMesh(ChunckComponent chunk, Mesh renderMesh)
