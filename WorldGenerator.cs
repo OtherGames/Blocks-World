@@ -1285,7 +1285,13 @@ public class WorldGenerator : MonoBehaviour
             mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
         }
 
-        mesh.vertices = vertices.ToArray();
+        mesh.vertices = new Vector3[vertices.Count];
+        for (int i = 0; i < vertices.Count; i++)
+        {
+            mesh.vertices[i] = vertices[i];
+        }
+
+        //mesh.vertices = vertices.ToArray();
         mesh.triangles = triangulos.ToArray();
         mesh.uv = uvs.ToArray();
 
