@@ -866,14 +866,10 @@ public class WorldGenerator : MonoBehaviour
 
         IEnumerator Async()
         {
-            var ebobo = new Vector3(-240, 16, -128);
-
             var chunckKey = WorldPosToChunckKey(chunk.pos + (Vector3.forward * size));
             while (!chuncks.ContainsKey(chunckKey))
             {
                 yield return null;
-                //if(chunk.pos == ebobo)
-                //print(chunckKey * size);
             }
             var frontChunck = chuncks[chunckKey];
 
@@ -881,9 +877,6 @@ public class WorldGenerator : MonoBehaviour
             while (!chuncks.ContainsKey(chunckKey))
             {
                 yield return null;
-                //if (chunk.pos == ebobo)
-                //    print(chunckKey * size);
-
             }
             var backChunck = chuncks[chunckKey];
 
@@ -891,9 +884,6 @@ public class WorldGenerator : MonoBehaviour
             while (!chuncks.ContainsKey(chunckKey))
             {
                 yield return null;
-                //if (chunk.pos == ebobo)
-                //    print(chunckKey * size);
-
             }
             var rightChunck = chuncks[chunckKey];
 
@@ -901,9 +891,6 @@ public class WorldGenerator : MonoBehaviour
             while (!chuncks.ContainsKey(chunckKey))
             {
                 yield return null;
-                //if (chunk.pos == ebobo)
-                //    print(chunckKey * size);
-
             }
             var leftChunck = chuncks[chunckKey];
 
@@ -911,9 +898,6 @@ public class WorldGenerator : MonoBehaviour
             while (!chuncks.ContainsKey(chunckKey))
             {
                 yield return null;
-                //if (chunk.pos == ebobo)
-                //    print(chunckKey * size);
-
             }
             var topChunck = chuncks[chunckKey];
 
@@ -921,16 +905,13 @@ public class WorldGenerator : MonoBehaviour
             while (!chuncks.ContainsKey(chunckKey))
             {
                 yield return null;
-                //if (chunk.pos == ebobo)
-                //    print(chunckKey * size);
-
             }
             var bottomChunck = chuncks[chunckKey];
 
             ClearMeshFields();
             ClearColliderMeshFields();
 
-            Mesh mesh = chunk.meshFilter.mesh;//new();
+            Mesh mesh = chunk.meshFilter.mesh;
             mesh.Clear();
 
             for (int x = 0; x < size; x++)
