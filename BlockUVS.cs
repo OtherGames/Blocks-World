@@ -83,6 +83,8 @@ public struct BlockUVS
                 return new BlockUVS(15, 2);
             case 36:// Гравий
                 return new BlockUVS(3, 14);
+            case 61:// Cliff Road
+                return new BlockUVS(8, 2);
             case 66:
                 return new BlockUVS(0, 1);
             case 88:// Engine
