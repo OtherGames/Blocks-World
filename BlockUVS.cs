@@ -99,8 +99,8 @@ public struct BlockUVS
                 return new BlockUVS(2, 14);
             case 91:// Actuator Rotary
                 return new BlockUVS(5, 1);
-            case 92:// Wood Plank 
-                return new BlockUVS(12, 4);
+            case 92:// Wooded Timber 
+                return new BlockUVS(12, 3, 12, 4);
             case 94:// INTERWOVEN_STONE 
                 return new BlockUVS(9, 2);
             case 100:// Простой верстак
