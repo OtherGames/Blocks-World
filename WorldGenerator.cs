@@ -13,6 +13,7 @@ public class WorldGenerator : MonoBehaviour
     [SerializeField] bool generateNavLinks = true;
     [SerializeField] int viewChunck = 5;
     [SerializeField] float navMeshVoxelSize = 0.18f;
+    [SerializeField] int navMeshTileSize = 128;
     [SerializeField] public Mesh testoMesh;
     [SerializeField] public Transform testos;
     [SerializeField] public Mesh testosCollider;
@@ -297,7 +298,7 @@ public class WorldGenerator : MonoBehaviour
                 chunck.meshSurface.overrideVoxelSize = true;
                 chunck.meshSurface.voxelSize = navMeshVoxelSize;
                 chunck.meshSurface.overrideTileSize = true;
-                chunck.meshSurface.tileSize = 128;//64;
+                chunck.meshSurface.tileSize = navMeshTileSize;//64;
                 chunck.meshSurface.minRegionArea = 0.3f;
                 //chunck.meshSurface
 
@@ -397,7 +398,7 @@ public class WorldGenerator : MonoBehaviour
             chunck.meshSurface.overrideVoxelSize = true;
             chunck.meshSurface.voxelSize = navMeshVoxelSize;
             chunck.meshSurface.overrideTileSize = true;
-            chunck.meshSurface.tileSize = 128;//64;
+            chunck.meshSurface.tileSize = navMeshTileSize;//64;
             chunck.meshSurface.minRegionArea = 0.3f;
 
             StartCoroutine(DelayableBuildNavMesh(chunck));
@@ -496,7 +497,7 @@ public class WorldGenerator : MonoBehaviour
             chunck.meshSurface.overrideVoxelSize = true;
             chunck.meshSurface.voxelSize = navMeshVoxelSize;
             chunck.meshSurface.overrideTileSize = true;
-            chunck.meshSurface.tileSize = 128;//64;
+            chunck.meshSurface.tileSize = navMeshTileSize;//64;
             chunck.meshSurface.minRegionArea = 0.3f;
             //chunck.meshSurface
 
@@ -1276,11 +1277,11 @@ public class WorldGenerator : MonoBehaviour
         //mesh.triangles = triangulos.ToArray();
         //mesh.uv = uvs.ToArray();
 
-        mesh.RecalculateBounds();
         mesh.RecalculateNormals();
         mesh.RecalculateTangents();
-        //mesh.OptimizeReorderVertexBuffer();
-        mesh.Optimize();
+        mesh.RecalculateBounds();
+
+        mesh.OptimizeReorderVertexBuffer();
         //mesh.MarkModified();
         mesh.MarkDynamic();
 
@@ -1302,13 +1303,6 @@ public class WorldGenerator : MonoBehaviour
         CreateColliderMesh(chunck, mesh);
 
         return mesh;
-    }
-
-    private void SetTrianglos(Mesh mesh, List<int> trianglos)
-    {
-        var triArr = new int[trianglos.Count];
-        trianglos.CopyTo(triArr);
-        mesh.triangles = triArr;
     }
 
     private void CreateColliderMesh(ChunckComponent chunk, Mesh renderMesh)
@@ -1600,22 +1594,18 @@ public class WorldGenerator : MonoBehaviour
         mesh.SetVertices(vertices);
         mesh.SetTriangles(triangulos, 0);
         mesh.SetUVs(0, uvs);
-        //mesh.vertices = vertices.ToArray();
-        //mesh.triangles = triangulos.ToArray();
-        //mesh.uv = uvs.ToArray();
 
-        mesh.RecalculateBounds();
         mesh.RecalculateNormals();
         mesh.RecalculateTangents();
+        mesh.RecalculateBounds();
         mesh.OptimizeReorderVertexBuffer();
-        mesh.Optimize();
+
+        CreateColliderMesh(chunck, mesh);
 
         if (generateNavMesh)
         {
             StartCoroutine(DelayableUpdateNavMesh(chunck));
         }
-
-        CreateColliderMesh(chunck, mesh);
 
         return mesh;
     }
