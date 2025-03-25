@@ -535,7 +535,7 @@ public class WorldGenerator : MonoBehaviour
         }
     }
 
-    IEnumerator DelayableUpdateNavMesh(ChunckComponent chunck)
+    public IEnumerator DelayableUpdateNavMesh(ChunckComponent chunck)
     {
         var navMeshSurface = chunck.meshSurface;
 
