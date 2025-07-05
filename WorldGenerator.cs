@@ -2092,13 +2092,19 @@ public class WorldGenerator : MonoBehaviour
                     for (int i = 0; i < componentsChunk.Count; i++)
                     {
                         var playerPos = player.position;
-                        var chunkPos = componentsChunk[i].meshFilter.transform.position;
+
+                        var chunk = componentsChunk[i];
+
+                        if (!chunk.meshFilter)
+                            continue;
+
+                        var chunkPos = chunk.meshFilter.transform.position;
                         var dist = Vector3.Distance(playerPos, chunkPos);
                         //print(dist);
                         if (dist > viewChunck * size * 3)
                         {
                             //print(componentsChunk[i].meshFilter.gameObject);
-                            Destroy(componentsChunk[i].meshFilter.gameObject);
+                            Destroy(chunk.meshFilter.gameObject);
                             chuncks.Remove(keysChunk[i]);
                 
                         }
