@@ -1,26 +1,21 @@
 using UnityEngine;
 
 /*
- ExampleUsage.cs - tiny demo MonoBehaviour showing how to call GenerateLODMesh.
- Attach this to a GameObject whose transform.position equals the chunk's global origin in world-block coordinates.
- This example does not spawn the chunk buffer; it's only illustrative.
+ ExampleUsage.cs - demo showing how to call GenerateLODMesh with vertex color blending.
+ Attach to a GameObject whose transform.position equals the chunk's global origin in block coordinates.
 */
 
 public class ExampleUsage : MonoBehaviour
 {
-    // Imagine this is the block buffer for this chunk. In practice you have this already.
     public byte[,,] chunkBlocks;
-
-    // LOD level to generate
     public int lodLevel = 2;
+    public Material lodMaterial; // assign material that uses the URP vertex color shader
 
     void Start()
     {
-        // If you have a chunk blocks buffer, pass it in. Here we'll fabricate an example if it's null.
         if (chunkBlocks == null)
         {
             chunkBlocks = new byte[16,16,16];
-            // simple test: a sphere-ish solid center
             for (int x=0;x<16;x++) for (int y=0;y<16;y++) for (int z=0;z<16;z++)
             {
                 Vector3 c = new Vector3(x-8,y-6,z-8);
@@ -28,7 +23,7 @@ public class ExampleUsage : MonoBehaviour
             }
         }
 
-        Vector3Int chunkOrigin = Vector3Int.RoundToInt(transform.position); // user said transform.position == global chunk pos
+        Vector3Int chunkOrigin = Vector3Int.RoundToInt(transform.position);
         Mesh m = LODMeshGenerator.GenerateLODMesh(chunkBlocks, lodLevel, chunkOrigin);
 
         var mf = gameObject.GetComponent<MeshFilter>();
@@ -37,5 +32,6 @@ public class ExampleUsage : MonoBehaviour
         if (mr == null) mr = gameObject.AddComponent<MeshRenderer>();
 
         mf.mesh = m;
+        if (lodMaterial != null) mr.material = lodMaterial;
     }
 }

@@ -1,8 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-/* MarchingCubes.cs - unchanged from earlier version (geometry only).
-   It emits vertices and triangles; color assignment is done after in LODMeshGenerator.
+/* MarchingCubes.cs - unchanged (geometry only).
 */
 
 public static class MarchingCubes

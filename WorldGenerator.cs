@@ -640,7 +640,7 @@ public class WorldGenerator : MonoBehaviour
 
         }
         //var pw = Iterum.Utils.PerfWatch.StartNew();
-        var mesh = GenerateMesh(chunck, posX, posY, posZ);
+        //var mesh = GenerateMesh(chunck, posX, posY, posZ);
         //pw.Log("Standarto");
 
         //var pw1 = Iterum.Utils.PerfWatch.StartNew();
@@ -653,15 +653,16 @@ public class WorldGenerator : MonoBehaviour
         //var meshes = GreedyMesher.GenerateMeshes(chunck.blocks, padding: 0);//, posOffset, 16, 16, 16, atlasCols: 16, atlasRows: 16);
         //mesh = meshes[0];
         var ebos = new Vector3Int(posX, posY, posZ);
-        var meshu = LODMeshGenerator.GenerateLODMesh(chunck.blocks, 3, ebos);
+        var meshu = LODMeshGenerator.GenerateLODMesh(chunck.blocks, 1, ebos);
 
         //meshFilter.mesh = mesh;
 
         meshFilter.mesh = meshu;
         renderer.material = mat;
-            //renderer.material = meshes.opaqueMaterial;
-            //renderer.materials = meshes.materials;
-        
+        //renderer.material = meshes.opaqueMaterial;
+        //renderer.materials = meshes.materials;
+
+        collider.sharedMesh = meshu;
 
         //collider.sharedMesh = mesh;
         chunckGO.transform.position = new Vector3(posX, posY, posZ);

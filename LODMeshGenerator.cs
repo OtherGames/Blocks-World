@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /*
- LODMeshGenerator.cs (vertex-color version)
- - Same API as before: GenerateLODMesh(byte[,,] blocks, int lodLevel, Vector3Int chunkGlobalPosition)
- - After generating geometry via MarchingCubes, this version assigns a vertex color for every vertex
-   by sampling the nearest block ID at the vertex world position and mapping it to a color palette.
- - Uses Color32 lists for lower memory and faster upload.
+ LODMeshGenerator.cs (v5)
+ - Density-weighted color blending with sample stride optimization.
+ - Additional behavior: after mesh geometry is generated, all vertices are shifted by -1 along X axis,
+   as requested.
+ - API: GenerateLODMesh(byte[,,] blocks, int lodLevel, Vector3Int chunkGlobalPosition)
 */
 
 public static class LODMeshGenerator
@@ -67,6 +67,14 @@ public static class LODMeshGenerator
 
         var meshData = MarchingCubes.GenerateMesh(density, step, chunkGlobalPosition);
 
+        // Shift all vertices by -1 on X axis as requested.
+        for (int vi = 0; vi < meshData.Vertices.Count; vi++)
+        {
+            Vector3 v = meshData.Vertices[vi];
+            v.x += -1f;
+            meshData.Vertices[vi] = v;
+        }
+
         // Create mesh
         var mesh = new Mesh();
         if (meshData.Vertices.Count >= 65535)
@@ -75,38 +83,90 @@ public static class LODMeshGenerator
         mesh.SetVertices(meshData.Vertices);
         mesh.SetTriangles(meshData.Triangles, 0);
 
-        // Assign vertex colors by sampling block IDs near each vertex.
+        // Smooth color blending per-vertex with sampling stride optimization.
         var colors = new List<Color32>(meshData.Vertices.Count);
+
+        // Sampling radius: scale with step so higher LOD (bigger step) samples larger neighborhood.
+        float radius = Mathf.Max(1f, step * 1.5f);
+
+        // Optimization: sample stride equals the LOD step (reasonable default).
+        int sampleStep = Math.Max(1, step);
+
         for (int i = 0; i < meshData.Vertices.Count; i++)
         {
-            // world position of vertex (chunkLocal + chunk origin in blocks)
-            Vector3 local = meshData.Vertices[i]; // in block units relative to chunk origin
-            int wx = Mathf.RoundToInt(chunkGlobalPosition.x + local.x);
-            int wy = Mathf.RoundToInt(chunkGlobalPosition.y + local.y);
-            int wz = Mathf.RoundToInt(chunkGlobalPosition.z + local.z);
+            // note: vertices already shifted locally by -1 on X; when computing world position we still add chunkGlobalPosition
+            Vector3 local = meshData.Vertices[i]; // in block units relative to chunk origin (shifted)
+            Vector3 worldPos = new Vector3(chunkGlobalPosition.x + local.x, chunkGlobalPosition.y + local.y, chunkGlobalPosition.z + local.z);
 
-            byte id = GetBlockIDSafe(blocks, wx - chunkGlobalPosition.x, wy - chunkGlobalPosition.y, wz - chunkGlobalPosition.z, wx, wy, wz);
-            colors.Add(ColorForBlockID(id));
+            int minX = Mathf.FloorToInt(worldPos.x - radius);
+            int maxX = Mathf.CeilToInt(worldPos.x + radius);
+            int minY = Mathf.FloorToInt(worldPos.y - radius);
+            int maxY = Mathf.CeilToInt(worldPos.y + radius);
+            int minZ = Mathf.FloorToInt(worldPos.z - radius);
+            int maxZ = Mathf.CeilToInt(worldPos.z + radius);
+
+            float totalWeight = 0f;
+            float r = radius;
+            float accumR = 0f, accumG = 0f, accumB = 0f;
+
+            // Iterate with stride to reduce sample count. This trades detail for speed.
+            for (int bx = minX; bx <= maxX; bx += sampleStep)
+            {
+                for (int by = minY; by <= maxY; by += sampleStep)
+                {
+                    for (int bz = minZ; bz <= maxZ; bz += sampleStep)
+                    {
+                        Vector3 blockCenter = new Vector3(bx + 0.5f, by + 0.5f, bz + 0.5f);
+                        float dist = Vector3.Distance(worldPos, blockCenter);
+                        if (dist > r) continue;
+
+                        // weight decreases linearly with distance (triangle kernel)
+                        float weight = 1f - (dist / r);
+                        if (weight <= 0f) continue;
+
+                        byte id = GetBlockIDSafe(blocks, bx - chunkGlobalPosition.x, by - chunkGlobalPosition.y, bz - chunkGlobalPosition.z, bx, by, bz);
+                        if (!IsSolid(id)) continue;
+
+                        Color32 c32 = ColorForBlockID(id);
+                        float cfR = c32.r / 255f;
+                        float cfG = c32.g / 255f;
+                        float cfB = c32.b / 255f;
+
+                        accumR += cfR * weight;
+                        accumG += cfG * weight;
+                        accumB += cfB * weight;
+                        totalWeight += weight;
+                    }
+                }
+            }
+
+            if (totalWeight <= 0f)
+            {
+                colors.Add(ColorForBlockID(0));
+            }
+            else
+            {
+                float inv = 1f / totalWeight;
+                byte outR = (byte)Mathf.Clamp(Mathf.RoundToInt(accumR * inv * 255f), 0, 255);
+                byte outG = (byte)Mathf.Clamp(Mathf.RoundToInt(accumG * inv * 255f), 0, 255);
+                byte outB = (byte)Mathf.Clamp(Mathf.RoundToInt(accumB * inv * 255f), 0, 255);
+                colors.Add(new Color32(outR, outG, outB, 255));
+            }
         }
 
         mesh.SetColors(colors);
         mesh.RecalculateNormals();
         mesh.RecalculateBounds();
-
         return mesh;
     }
 
     private static bool IsSolid(byte id) => id != 0;
 
-    // Map block id to a color. Change constants to taste.
     private static Color32 ColorForBlockID(byte id)
     {
-        // The user specified: grass ID = 1, stone ID = 2, else brown.
-        if (id == 1) return new Color32(60, 180, 75, 255);    // green-ish (0.235,0.706,0.294)
-        if (id == 2) return new Color32(80, 80, 80, 255);  // gray
-        if (id == 14) return new Color32(128, 128, 128, 255);
-        return new Color32(150, 150, 150, 255);
-        return new Color32(115, 60, 20, 255);                 // brown
+        if (id == 1) return new Color32(60, 180, 75, 255);    // grass
+        if (id == 2) return new Color32(128, 128, 128, 255);  // stone
+        return new Color32(115, 60, 20, 255);                 // brown/fallback
     }
 
     private static byte GetBlockIDSafe(byte[,,] blocks, int localX, int localY, int localZ, int worldX, int worldY, int worldZ)
@@ -133,100 +193,3 @@ public static class LODMeshGenerator
         return 0;
     }
 }
-
-
-public static class MeshSmoothing
-{
-    // smoothingAngleDeg Ч угловой порог в градусах (например 60f)
-    public static void SmoothNormalsWithAngle(Mesh mesh, float smoothingAngleDeg)
-    {
-        if (mesh == null) return;
-
-        Vector3[] verts = mesh.vertices;
-        int[] tris = mesh.triangles;
-        int triCount = tris.Length / 3;
-
-        // 1) вычислим нормали граней и (опционально) площадь грани (дл€ взвешивани€)
-        Vector3[] faceNormals = new Vector3[triCount];
-        float[] faceAreas = new float[triCount];
-
-        for (int i = 0; i < triCount; i++)
-        {
-            int i0 = tris[i * 3 + 0];
-            int i1 = tris[i * 3 + 1];
-            int i2 = tris[i * 3 + 2];
-
-            Vector3 v0 = verts[i0];
-            Vector3 v1 = verts[i1];
-            Vector3 v2 = verts[i2];
-
-            Vector3 fn = Vector3.Cross(v1 - v0, v2 - v0);
-            float area = fn.magnitude * 0.5f;
-            if (fn.sqrMagnitude > 1e-9f) fn.Normalize();
-            else fn = Vector3.up;
-
-            faceNormals[i] = fn;
-            faceAreas[i] = area;
-        }
-
-        // 2) дл€ каждой вершины список индексов граней, в которых она участвует
-        Dictionary<int, List<int>> vertToFaces = new Dictionary<int, List<int>>();
-        for (int i = 0; i < triCount; i++)
-        {
-            for (int k = 0; k < 3; k++)
-            {
-                int vi = tris[i * 3 + k];
-                if (!vertToFaces.TryGetValue(vi, out var list))
-                {
-                    list = new List<int>();
-                    vertToFaces[vi] = list;
-                }
-                list.Add(i);
-            }
-        }
-
-        // 3) порог дл€ сравнени€ по скал€рному произведению
-        float cosThreshold = Mathf.Cos(smoothingAngleDeg * Mathf.Deg2Rad);
-
-        // 4) дл€ каждой вершины усредн€ем нормали соседних граней, но только те, что внутри углового порога
-        Vector3[] newNormals = new Vector3[verts.Length];
-        for (int vi = 0; vi < verts.Length; vi++)
-        {
-            if (!vertToFaces.TryGetValue(vi, out var adjFaces) || adjFaces.Count == 0)
-            {
-                newNormals[vi] = Vector3.up;
-                continue;
-            }
-
-            Vector3 sum = Vector3.zero;
-
-            // ЅерЄм каждую соседнюю грань как "референс" и добавл€ем все грани,
-            // угол между которыми <= порога. Ёто даЄт корректное разделение на "группы" углов.
-            // Ќа практике можно упростить, но этот способ часто даЄт ожидаемый результат.
-            foreach (int f in adjFaces)
-            {
-                Vector3 fnRef = faceNormals[f];
-                // собираем грани, близкие к fnRef
-                Vector3 partial = Vector3.zero;
-                float weightSum = 0f;
-                foreach (int g in adjFaces)
-                {
-                    float dot = Vector3.Dot(fnRef, faceNormals[g]);
-                    if (dot >= cosThreshold) // включаем грань в усреднение
-                    {
-                        // взвешивание по площади Ч даЄт более корректные результаты
-                        partial += faceNormals[g] * faceAreas[g];
-                        weightSum += faceAreas[g];
-                    }
-                }
-                if (weightSum > 0f) sum += partial / weightSum;
-            }
-
-            if (sum.sqrMagnitude > 1e-6f) newNormals[vi] = sum.normalized;
-            else newNormals[vi] = Vector3.up;
-        }
-
-        mesh.normals = newNormals;
-    }
-}
-
