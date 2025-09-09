@@ -1690,6 +1690,10 @@ public class WorldGenerator : MonoBehaviour
     byte frontChunckBlockID, topChunckBlockID, bottomChunckBlockID, backChunckBlockID, rightChunckBlockID, leftChunckBlockID;
     public Mesh UpdateMesh(ChunckComponent chunck)
     {
+
+        var ebos = chunck.renderer.transform.position.ToVecto3Int();
+        return LODMeshGenerator.GenerateLODMesh(chunck.blocks, 1, ebos);
+
         var frontChunck  = GetChunk(chunck.pos + (Vector3.forward * size));
         var backChunck   = GetChunk(chunck.pos + (Vector3.back * size));
         var rightChunck  = GetChunk(chunck.pos + (Vector3.right * size));
