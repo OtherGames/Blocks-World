@@ -19,6 +19,7 @@ public class WorldGenerator : MonoBehaviour
     [SerializeField] public Mesh testosCollider;
     public ProceduralGeneration procedural;
     public Material mat;
+    public Material ebosmat;
     public int countGenerateByOneFrame = 1;
     public bool useTestInit;
     public bool saveMeshes;
@@ -26,6 +27,9 @@ public class WorldGenerator : MonoBehaviour
     [Header("Async Generation Settings")]
     [SerializeField] int asyncDistanceGenerate = 38;
     [SerializeField] int getBlockIdAsyncFrequency = 6;
+
+    [Header("Smooth Lighting Settings")]
+    [SerializeField] public AnimationCurve AmbientOcclusionStrengthCurve;
 
     public Dictionary<Vector3Int, ChunckComponent> chuncks = new Dictionary<Vector3Int, ChunckComponent>();
     public Dictionary<byte, Mesh[]> blockableMeshes = new Dictionary<byte, Mesh[]>();
@@ -60,6 +64,8 @@ public class WorldGenerator : MonoBehaviour
     public static UnityEvent<BlockData> onBlockPlace = new UnityEvent<BlockData>();
     public static UnityEvent<TurnedBlockData> onTurnedBlockPlace = new UnityEvent<TurnedBlockData>();
 
+    Camera mainCam;
+
     private void Awake()
     {
         Inst = this;
@@ -84,6 +90,7 @@ public class WorldGenerator : MonoBehaviour
             AddBlockableColliderMesh(1, testosCollider);
         }
 
+        mainCam = Camera.main;
     }
 
     public void AddPlayer(Transform player)
@@ -101,6 +108,7 @@ public class WorldGenerator : MonoBehaviour
     IEnumerable<Vector3Int> chuncksPositions;
     List<Vector3Int> checkingPoses     = new List<Vector3Int>();
     List<Vector3Int> notGeneratedPoses = new List<Vector3Int>();
+    List<Vector3Int> othersPoses = new();
     void DynamicCreateChunck()
     {
         var viewDistance = viewChunck * size;
@@ -137,29 +145,111 @@ public class WorldGenerator : MonoBehaviour
                 return;
             }
 
+            //checkingPoses.Clear();
+            //notGeneratedChuncks.Clear();
+            //for (float x = -viewDistance + pos.x; x < viewDistance + pos.x; x += size)
+            //{
+            //    for (float y = -viewDistance + pos.y; y < viewDistance + pos.y; y += size)
+            //    {
+            //        for (float z = -viewDistance + pos.z; z < viewDistance + pos.z; z += size)
+            //        {
+            //            var worldPos = new Vector3(x, y, z);
+
+            //            if (!HasChunck(worldPos, out var checkingKey))
+            //            {
+            //                checkingPoses.Add(checkingKey * size);
+            //            }
+
+            //            if (notGeneratedChuncks.Contains(checkingKey))
+            //            {
+            //                notGeneratedPoses.Add(checkingKey);
+            //                notGeneratedChuncks.Remove(checkingKey);
+            //            }
+            //        }
+            //    }
+            //}
+
+            // ¬ начало метода Ч получить фрустум раз/фрейм
+            var cam = mainCam;// или тво€ камера
+            var camPos = cam.transform.position;
+            var camForward = cam.transform.forward;
+            Plane[] frustumPlanes = GeometryUtility.CalculateFrustumPlanes(cam);
+
+            // предвычисл€ем cos половинного максимального угла (учтЄм и горизонтальный FOV)
+            float vFovRad = cam.fieldOfView * Mathf.Deg2Rad;
+            float hFovRad = 2f * Mathf.Atan(Mathf.Tan(vFovRad * 0.5f) * cam.aspect);
+            float maxHalfAngle = Mathf.Max(vFovRad * 0.5f, hFovRad * 0.5f);
+            float cosHalfMax = Mathf.Cos(maxHalfAngle);
+
+            // ¬ј∆Ќќ: лучше работать в координатах чанков (целых)
+            // size Ч размер чанка (int)
+            int chunkSize = size;
+            Vector3 playerPos = player.transform.position;
+            int minChunkX = Mathf.FloorToInt((playerPos.x - viewDistance) / chunkSize);
+            int maxChunkX = Mathf.FloorToInt((playerPos.x + viewDistance) / chunkSize);
+            int minChunkY = Mathf.FloorToInt((playerPos.y - viewDistance) / chunkSize);
+            int maxChunkY = Mathf.FloorToInt((playerPos.y + viewDistance) / chunkSize);
+            int minChunkZ = Mathf.FloorToInt((playerPos.z - viewDistance) / chunkSize);
+            int maxChunkZ = Mathf.FloorToInt((playerPos.z + viewDistance) / chunkSize);
+
             checkingPoses.Clear();
+            othersPoses.Clear();
             notGeneratedChuncks.Clear();
-            for (float x = -viewDistance + pos.x; x < viewDistance + pos.x; x += size)
+            notGeneratedPoses.Clear();
+
+            for (int cx = minChunkX; cx <= maxChunkX; cx++)
             {
-                for (float y = -viewDistance + pos.y; y < viewDistance + pos.y; y += size)
+                for (int cy = minChunkY; cy <= maxChunkY; cy++)
                 {
-                    for (float z = -viewDistance + pos.z; z < viewDistance + pos.z; z += size)
+                    for (int cz = minChunkZ; cz <= maxChunkZ; cz++)
                     {
-                        var worldPos = new Vector3(x, y, z);
-                        
-                        if (!HasChunck(worldPos, out var checkingKey))
+                        Vector3Int chunkKey = new Vector3Int(cx, cy, cz); // ключ в чанковой сетке
+                                                                          // если чанк уже есть Ч пропускаем
+                        if (HasChunck(chunkKey*chunkSize, out var dummy)) continue;
+
+                        // ÷ентр чанка в мировых координатах
+                        Vector3 center = new Vector3(
+                            cx * chunkSize + chunkSize * 0.5f,
+                            cy * chunkSize + chunkSize * 0.5f,
+                            cz * chunkSize + chunkSize * 0.5f
+                        );
+
+                        // 1) Ѕыстра€ проверка по рассто€нию (sqr)
+                        float sqrDist = (center - camPos).sqrMagnitude;
+                        if (sqrDist > viewDistance * viewDistance) continue;
+
+                        // 2) Ѕыстра€ проверка по конусу взгл€да (dot)
+                        Vector3 toCenter = center - camPos;
+                        // избегаем нормализации до проверки на нулевой вектор
+                        float len = toCenter.magnitude;
+                        if (len <= 0.0001f)
                         {
-                            checkingPoses.Add(checkingKey * size);
+                            // если камера пр€мо внутри чанка Ч берЄм чанк
+                            checkingPoses.Add(chunkKey * chunkSize);
+                            continue;
+                        }
+                        
+                        float dot = Vector3.Dot(camForward, toCenter / len);
+                        if (dot < cosHalfMax)
+                        {
+                            othersPoses.Add(chunkKey * chunkSize);
+                            continue; // слишком в сторону Ч не видим
                         }
 
-                        if (notGeneratedChuncks.Contains(checkingKey))
+                        // 3) “очный тест фрустума (AABB)
+                        Bounds b = new Bounds(center, Vector3.one * chunkSize);
+                        if (!GeometryUtility.TestPlanesAABB(frustumPlanes, b)) 
                         {
-                            notGeneratedPoses.Add(checkingKey);
-                            notGeneratedChuncks.Remove(checkingKey);
+                            othersPoses.Add(chunkKey * chunkSize);
+                            continue; 
                         }
+
+                        // если прошЄл все проверки Ч добавл€ем
+                        checkingPoses.Add(chunkKey * chunkSize);
                     }
                 }
             }
+
 
             int idx = 0;
             // ѕеределать без аллокаций Ћинки
@@ -167,6 +257,32 @@ public class WorldGenerator : MonoBehaviour
             chuncksPositions = SortPositionsByDistance(checkingPoses, player.position.ToVecto3Int());
             foreach (var checkingKey in chuncksPositions)
             {
+                var centerChuk = checkingKey + Vector3Int.one * (size / 2);
+                var dist = Vector3.Distance(centerChuk, player.position);
+                if (dist < asyncDistanceGenerate)
+                {
+                    CreateChunck(checkingKey.x, checkingKey.y, checkingKey.z);
+                }
+                else
+                {
+                    CreateChunckAsync(checkingKey.x, checkingKey.y, checkingKey.z);
+                }
+                idx++;
+                if (idx >= countGenerateByOneFrame)
+                {
+                    idx = 0;
+                    return;
+                }
+            }
+
+
+            chuncksPositions = SortPositionsByDistance(othersPoses, player.position.ToVecto3Int());
+            foreach (var checkingKey in chuncksPositions)
+            {
+                //// TO DO
+                //if (chuncks.ContainsKey(checkingKey))
+                //    continue;
+
                 var centerChuk = checkingKey + Vector3Int.one * (size / 2);
                 var dist = Vector3.Distance(centerChuk, player.position);
                 if (dist < asyncDistanceGenerate)
@@ -206,7 +322,7 @@ public class WorldGenerator : MonoBehaviour
             uvs?.Clear();
 
             var chunck = new ChunckComponent(posX, posY, posZ);
-            var chunkKey = new Vector3Int(posX / size, posY / size, posZ / size);
+            var chunkKey = chunck.key;
 
             int worldX;
             int worldY;
@@ -280,13 +396,34 @@ public class WorldGenerator : MonoBehaviour
             //collider.sharedMesh = mesh;
             chunckGO.transform.position = new Vector3(posX, posY, posZ);
             chunckGO.transform.SetParent(transform, false);
-            chunckGO.isStatic = true;
+            //chunckGO.isStatic = true;
 
             chunckGO.layer = 7;
 
             chuncks.Add(chunkKey, chunck);
+            chunck.SetupNeighbours();
 
             yield return null;
+
+
+            ////пересчитать сам и непосредственных соседей
+            //var offsets = new Vector3Int[] {
+            //    new Vector3Int(0,1,0),
+            //    new Vector3Int(0,-1,0),
+            //    new Vector3Int(1,0,0), new Vector3Int(-1,0,0),
+            //    new Vector3Int(0,0,1), new Vector3Int(0,0,-1),
+            //    new Vector3Int(0,0,0)
+            //   // при необходимости добавь по y
+            //};
+            //foreach (var o in offsets)
+            //{
+            //    Vector3Int keyChunkPos = new Vector3Int(Mathf.FloorToInt(chunck.pos.x), Mathf.FloorToInt(chunck.pos.y), Mathf.FloorToInt(chunck.pos.z)) + o * chunck.size;
+            //    if (chuncks.TryGetValue(keyChunkPos, out var nchunk))
+            //    {
+            //        nchunk.RecalculateLightmapAndApply();
+            //    }
+            //}
+
 
             if (generateNavMesh)
             {
@@ -329,6 +466,8 @@ public class WorldGenerator : MonoBehaviour
 
         return positions;
     }
+
+
 
     private ChunckComponent GenerateChunck(Vector3Int chunckKey)
     {
@@ -423,6 +562,7 @@ public class WorldGenerator : MonoBehaviour
             chunckState = ChunckState.NotGenerated
         };
         var key = new Vector3Int(posX / size, posY / size, posZ / size);
+
         notGeneratedChuncks.Add(key);
         chuncks.Add(new(key.x, key.y, key.z), chunck);
         return chunck;
@@ -439,6 +579,7 @@ public class WorldGenerator : MonoBehaviour
         int worldX;
         int worldY;
         int worldZ;
+        bool hasAir = false;
         if (!chunck.blocksLoaded)
         {
             for (int x = 0; x < size; x++)
@@ -451,7 +592,10 @@ public class WorldGenerator : MonoBehaviour
                         worldY = y + posY;
                         worldZ = z + posZ;
                         byte generatedBlockID = procedural.GetBlockID(worldX, worldY, worldZ);
-                        
+                        if (generatedBlockID == 0)
+                        {
+                            hasAir = true;
+                        }
                         if (generatedBlockID == DIRT && procedural.GetBlockID(worldX, worldY + 1, worldZ) == 0)
                         {
                             chunck.blocks[x, y, z] = GRASS;
@@ -467,6 +611,8 @@ public class WorldGenerator : MonoBehaviour
             }
         }
 
+        chunck.hasAir = hasAir;
+
         ChunckComponent.onBlocksSeted?.Invoke(chunck);
 
         var chunckGO = new GameObject($"Chunck {posX} {posY} {posZ}");
@@ -477,15 +623,54 @@ public class WorldGenerator : MonoBehaviour
         chunck.meshFilter = meshFilter;
         chunck.collider = collider;
 
+        if (hasAir)
+        {
+            //int iii = 0;
+            //var str = $"ѕозици€ X:{posX} Y:{posY} Z:{posZ} \nЅлоки:[";
+            //foreach (var item in chunck.blocks)
+            //{
+            //    str += $"{item},";
+            //    iii++;
+            //}
+            //str += $"] { iii}";
+            //print(str);
+            
+            
+            //DumpChunkToFile.SaveChunk(chunck.blocks, $"{Application.dataPath}/Dump_x{posX}y{posY}z{posZ}.txt");
+
+        }
+        //var pw = Iterum.Utils.PerfWatch.StartNew();
         var mesh = GenerateMesh(chunck, posX, posY, posZ);
+        //pw.Log("Standarto");
+
+        //var pw1 = Iterum.Utils.PerfWatch.StartNew();
+        //var meshes = GreedyMesherOpaqueTransparent.GenerateMeshes(chunck.blocks, mat, null);//, posOffset, 16, 16, 16, atlasCols: 16, atlasRows: 16);
+        //var mesh = meshes.mesh;
+        //var mesh = meshes.opaqueMesh;
+
+        //pw1.Log("Greedy");
+
+        //var meshes = GreedyMesher.GenerateMeshes(chunck.blocks, padding: 0);//, posOffset, 16, 16, 16, atlasCols: 16, atlasRows: 16);
+        //mesh = meshes[0];
+        var ebos = new Vector3Int(posX, posY, posZ);
+        var meshu = LODMeshGenerator.GenerateLODMesh(chunck.blocks, 3, ebos);
+
+        //meshFilter.mesh = mesh;
+
+        meshFilter.mesh = meshu;
         renderer.material = mat;
-        meshFilter.mesh = mesh;
+            //renderer.material = meshes.opaqueMaterial;
+            //renderer.materials = meshes.materials;
+        
+
         //collider.sharedMesh = mesh;
         chunckGO.transform.position = new Vector3(posX, posY, posZ);
         chunckGO.transform.SetParent(transform, false);
-        chunckGO.isStatic = true;
+        //chunckGO.isStatic = true;
 
-        
+
+        //chunck.SetupNeighbours();
+
 
         if (generateNavMesh)
         {
@@ -513,7 +698,7 @@ public class WorldGenerator : MonoBehaviour
         //print(count);
         chunckGO.layer = 7;
 
-        chuncks.Add(new(posX/size, posY/size, posZ/size), chunck);
+        chuncks.Add(chunck.key, chunck);
 
         return chunck;
     }
